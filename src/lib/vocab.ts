@@ -1,61 +1,30 @@
-export const STATUS_OPTIONS = [
-  { value: "new", label: "New" },
-  { value: "learning", label: "Learning" },
-  { value: "reviewing", label: "Reviewing" },
-  { value: "mastered", label: "Mastered" },
-] as const;
-
-export type WordStatus = (typeof STATUS_OPTIONS)[number]["value"];
+export const STATUS_OPTIONS = ["new", "learning", "reviewing", "mastered"] as const;
+export type WordStatus = (typeof STATUS_OPTIONS)[number];
 
 export const STATUS_META: Record<
   WordStatus,
-  { label: string; bg: string; fg: string; ring: string }
+  { label: string; bg: string; fg: string }
 > = {
-  mastered: {
-    label: "Mastered",
-    bg: "bg-status-mastered",
-    fg: "text-status-mastered-fg",
-    ring: "ring-status-mastered-fg/20",
-  },
-  reviewing: {
-    label: "Reviewing",
-    bg: "bg-status-reviewing",
-    fg: "text-status-reviewing-fg",
-    ring: "ring-status-reviewing-fg/20",
-  },
-  learning: {
-    label: "Learning",
-    bg: "bg-status-learning",
-    fg: "text-status-learning-fg",
-    ring: "ring-status-learning-fg/20",
-  },
-  new: {
-    label: "New",
-    bg: "bg-status-new",
-    fg: "text-status-new-fg",
-    ring: "ring-status-new-fg/20",
-  },
+  new: { label: "New", bg: "#EEF2FF", fg: "#4338CA" },
+  learning: { label: "Learning", bg: "#FEF3C7", fg: "#B45309" },
+  reviewing: { label: "Reviewing", bg: "#FCE7F3", fg: "#BE185D" },
+  mastered: { label: "Mastered", bg: "#DCFCE7", fg: "#166534" },
 };
 
 export const TAG_COLORS = [
-  "society",
-  "environment",
-  "psychology",
-  "justice",
-  "science",
-  "abstract",
-  "emotion",
-  "academic",
-  "general",
-  "nature",
+  "#8B5CF6",
+  "#10B981",
+  "#F59E0B",
+  "#EF4444",
+  "#3B82F6",
+  "#EC4899",
+  "#14B8A6",
+  "#F97316",
+  "#6366F1",
+  "#84CC16",
 ] as const;
 
-export type TagColor = (typeof TAG_COLORS)[number];
-
-export function tagBgClass(color: string): string {
-  const c = TAG_COLORS.includes(color as TagColor) ? color : "general";
-  return `bg-tag-${c} text-foreground/80`;
-}
+export type TagColor = string;
 
 export const QUOTES = [
   { text: "The limits of my language mean the limits of my world.", author: "Ludwig Wittgenstein" },
