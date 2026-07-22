@@ -85,14 +85,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Learn SAT words in real context, with Vietnamese meanings, nuance notes, and adaptive quizzes.",
+          "Contextuary is a bilingual SAT vocabulary app with AI-generated Vietnamese meanings, examples, and quizzes.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Contextuary — SAT vocabulary in context" },
+      { name: "twitter:description", content: "Contextuary is a bilingual SAT vocabulary app with AI-generated Vietnamese meanings, examples, and quizzes." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1a906a2f-f3b8-4c40-b932-1c1d99f62571/id-preview-92520aa6--ad7c7f05-f224-4d50-887a-d65d21209a8b.lovable.app-1784735965958.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1a906a2f-f3b8-4c40-b932-1c1d99f62571/id-preview-92520aa6--ad7c7f05-f224-4d50-887a-d65d21209a8b.lovable.app-1784735965958.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
