@@ -32,7 +32,7 @@ function TagsPage() {
   const del = useServerFn(deleteTag);
   const upd = useServerFn(updateTag);
   const [name, setName] = useState("");
-  const [color, setColor] = useState(TAG_COLORS[0]);
+  const [color, setColor] = useState<string>(TAG_COLORS[0]);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["tags"] });
 
