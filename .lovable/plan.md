@@ -1,66 +1,76 @@
 
-# Contextuary marketing landing page
+# Contextuary — build plan
 
-Build a public landing page at `/` that matches the attached mockup, and route signed-in users straight to the app.
+A full-stack SAT vocabulary app with per-user data, AI-generated word explanations in Vietnamese, quizzes, and stats. Built in one pass on TanStack Start + Lovable Cloud + Lovable AI (Gemini) + Google TTS.
 
-## Routing
+## 1. Backend (Lovable Cloud)
 
-- Replace `src/routes/index.tsx` (currently redirects `/` → `/words`) with a real landing page component.
-  - In `beforeLoad`, check the Supabase session. If signed in, `redirect({ to: "/words" })`. Otherwise render the landing page.
-- Landing page CTAs ("Log in", "Sign up", "Get started for free", "Explore the dashboard", "Try a sample quiz") link to `/auth`.
-- Add unique `head()` metadata (title, description, og:title, og:description, og:type=website, canonical, og:url) — no `og:image` unless we generate one.
+Enable Lovable Cloud, then create these tables via one migration (with GRANTs + RLS scoped to `auth.uid()`):
 
-## Page structure (top to bottom)
+- `tags` — id, user_id, name, color, created_at
+- `words` — id, user_id, word, ipa, vietnamese_meaning, nuance_note, examples (jsonb[]), collocations (text[]), synonyms (text[]), antonyms (text[]), memory_hint, status ('new'|'learning'|'reviewing'|'mastered'), tag_id (fk nullable), is_favorite, created_at, updated_at
+- `quizzes` — id, user_id, created_at, score, total_questions, mode
+- `quiz_words` — quiz_id, word_id, correct, question_type
+- `profiles` — id (fk auth.users), display_name, daily_goal, theme, created_at (auto-created via trigger on signup)
 
-1. **Sticky nav bar** — Contextuary wordmark + sparkle icon, anchor links (Features, How it works, Pricing, About) that scroll to sections, "Log in" ghost button, "Sign up" primary button. Translucent white with subtle border on scroll.
-2. **Hero** — two-column on desktop, stacked on mobile.
-   - Left: headline "Understand words. In context. For real." with the middle line "In context." in `text-primary` italic serif accent; subcopy; input styled like `Paste any SAT passage or try a word…` with a violet sparkle submit button (non-functional, routes to `/auth` on submit); example word chips (Ubiquitous, Mitigate, Salient, Arbitrary); social-proof row with 3 stacked avatar circles + "Loved by 3,000+ ambitious learners".
-   - Right: two overlapping floating cards — a passage card with the word "ubiquitous" highlighted, and a detailed word card (word, IPA, speaker icon, Mastered badge, Vietnamese meaning, SAT Context block, Example, "Save to library" button, star). Soft shadow, subtle float animation, decorative sparkles + orbit lines behind.
-3. **How Contextuary works** — 4-step row with numbered circles, lucide icons (FileText, Sparkles, BookOpen, Target), title + one-line description each. Connector line between steps on desktop.
-4. **See Contextuary in action** — split card: left copy + curved arrow; right sentence card with the word "arbitrary" bolded/highlighted; on hover, a definition popover card appears (meaning, "NOT" simpler synonym `random`, Example, Memory hint). Implemented with Framer Motion for the hover reveal.
-5. **All your words. All in one place.** — split section: left copy + "Explore the dashboard" CTA; right condensed static preview of the My Words dashboard (dark purple sidebar w/ Contextuary logo + nav + "Overview This Week" mini card, lavender content area with search + Add Word + table of 4 sample rows with status + tag pills). Hover: scale 1.02 + subtle tilt.
-6. **Practice smarter, not harder.** — split section: left copy + "Try a sample quiz" CTA; right quiz question card ("What does mitigate mean?" with 4 lettered options, C selected/correct) + smaller "Correct!" feedback card overlapping.
-7. **Track your progress** — 4 stat cards (Words Learned 642, Mastered 391, Quiz Accuracy 86%, Learning Streak 42) each with icon, big number with count-up animation on scroll (react-intersection-observer-less via IntersectionObserver + rAF), delta line, and inline SVG sparkline (unique color per card using chart tokens).
-8. **Testimonial** — single centered quote with author, arrow buttons + dot pagination cycling through 3 hardcoded testimonials.
-9. **Dark footer** — deep navy/purple bg (reuse `--sidebar` token), left column with heading "Ready to transform your vocabulary?" + "Get started for free" button; right columns: Product, Resources, Company link groups + Contextuary brand column with tagline and social icons (Twitter, Instagram, YouTube, message); bottom copyright line.
+Seed ~10 default tags per new user via the signup trigger (Society, Environment, Psychology, Justice, Science, Abstract, Emotion, Academic, General, Nature) each with a color.
 
-## Design system
+## 2. Auth
 
-- Reuse existing tokens from `src/styles.css` (primary violet, lavender background, sidebar deep purple, status pills). No new color additions needed.
-- Serif accent for "In context." — load Instrument Serif via `<link>` in `src/routes/__root.tsx` and add `--font-serif` token in `@theme`; apply with a utility class only on the hero accent.
-- All spacing, radii, shadows via existing tokens.
+- Enable Email/password + Google via `configure_social_auth`.
+- Auth page at `/auth` (public) with tabs: Sign in / Sign up + "Continue with Google" (via `lovable.auth.signInWithOAuth`).
+- All app routes live under `src/routes/_authenticated/` using the managed layout.
+- Session listener in `__root.tsx`.
 
-## Animations (Framer Motion, already installed if not add via `bun add framer-motion`)
+## 3. AI (Lovable AI Gateway, Gemini)
 
-- Section-level `whileInView` fade + slide-up (y: 24 → 0, opacity 0 → 1, duration 0.5, once: true, 15% viewport).
-- Hero floating cards: infinite `y: [0, -8, 0]` over 6s, staggered.
-- Background: absolutely-positioned sparkle SVGs + faint drifting SAT words with slow `x`/`y` loops and low opacity.
-- Card/button hover: `scale: 1.02`, shadow lift, 200ms.
-- Dashboard preview: `whileHover={{ scale: 1.02, rotate: -0.5 }}`.
-- Stat count-up: IntersectionObserver triggers a rAF tween from 0 to target over 1.2s ease-out.
-- Global CSS: `transition-duration: 200ms` default for interactive elements.
-- Respect `prefers-reduced-motion` — disable loops and count-up when set.
+Server functions under `src/lib/ai.functions.ts`:
 
-## New files
+- `generateWordDetails({ word })` — Gemini structured output → { ipa, vietnamese_meaning, nuance_note, examples[3], collocations[], synonyms[], antonyms[], memory_hint, suggested_tag }. User reviews in a modal before save.
+- `generateQuiz({ wordIds, mode })` — builds multiple-choice or fill-in-the-blank questions from selected words.
+- Server route `src/routes/api/tts.ts` — streams Gemini TTS audio (SSE→PCM) for the speaker button.
 
-- `src/components/landing/nav-bar.tsx`
-- `src/components/landing/hero.tsx`
-- `src/components/landing/how-it-works.tsx`
-- `src/components/landing/in-action.tsx`
-- `src/components/landing/dashboard-preview.tsx`
-- `src/components/landing/quiz-preview.tsx`
-- `src/components/landing/stats.tsx` (with `CountUp` and `Sparkline` sub-components)
-- `src/components/landing/testimonials.tsx`
-- `src/components/landing/footer.tsx`
-- `src/components/landing/decorations.tsx` (sparkles + drifting words)
+## 4. Routes / UI
 
-## Edited files
+Three-column layout in `_authenticated/route.tsx` (sidebar + main + slide-in drawer).
 
-- `src/routes/index.tsx` — becomes the landing page + auth-aware redirect + head metadata.
-- `src/routes/__root.tsx` — add Instrument Serif `<link>`.
-- `src/styles.css` — add `--font-serif` in `@theme inline`.
+- `_authenticated/index.tsx` → **My Words** (redirect / → /words)
+  - Sidebar: Contextuary logo, tagline, nav (My Words / Quiz / Statistics / Tags / Settings), "Overview This Week" card (totals, mastered/learning/new bars, quiz accuracy + sparkline), rotating quote card.
+  - Main: title, search input + sparkle button + `+ Add Word`, data table (checkbox, Word, Vietnamese Meaning, Example with inline highlighted word, Status pill, Tag pill, ⋮ menu), sticky bottom "Generate Quiz" bar for selected words.
+  - Right drawer (Sheet, opens on row click; bottom-sheet on mobile): word + speaker + favorite star, IPA, editable status, Contextual Vietnamese Meaning card, Examples list, Collocations chips, Synonyms, Antonyms, Memory Hint, Edit / ⋯ / close.
+- `_authenticated/quiz.tsx` — filter (all / by tag / by status), start quiz, per-question screen, results screen updating word status + writing `quizzes` + `quiz_words`.
+- `_authenticated/statistics.tsx` — Recharts: words over time, mastery breakdown, quiz accuracy trend, most-missed words list.
+- `_authenticated/tags.tsx` — CRUD tags with color picker, count per tag.
+- `_authenticated/settings.tsx` — display name, daily goal, theme toggle, change password, log out, delete account.
+- `/auth` — public sign-in/up.
 
-## Out of scope
+## 5. Design system
 
-- No changes to `/auth`, `_authenticated/*`, AI functions, or DB schema.
-- Nav links (Features, How it works, Pricing, About) scroll to on-page sections; no separate `/pricing` or `/about` routes.
+Update `src/styles.css` tokens:
+- Primary deep purple (~oklch violet 600), primary-glow lighter violet, lavender background (`--background` ~ #F5F3FF), white cards, rounded-xl radius, soft shadows.
+- Status colors: mastered (green), reviewing (amber), learning (blue), new (gray) as semantic tokens with matching foreground/background pairs.
+- Tag palette: 10 named category colors as CSS vars.
+- Inter font via `<link>` in `__root.tsx`.
+- Sidebar dark-purple theme via `--sidebar-*` tokens.
+- Update `head()` per route with unique title/description/og.
+
+## 6. Technical notes
+
+- Data reads: TanStack Query with `queryOptions` + `useSuspenseQuery`; loaders in `_authenticated/*` prime cache via `ensureQueryData` calling authenticated server fns (`requireSupabaseAuth`).
+- Mutations: `useMutation` → server fn → invalidate keys.
+- Ownership: `user_id = context.userId` in every insert; never trust client.
+- Google OAuth via Lovable broker; `redirect_uri = window.location.origin`.
+- TTS: server route proxies Gemini `google/gemini-2.5-flash-tts` SSE→PCM; small client hook plays via WebAudio.
+- Add `attachSupabaseAuth` middleware in `src/start.ts`.
+- Replace placeholder `src/routes/index.tsx` with redirect to `/words` (or `/auth` if signed out — handled via `_authenticated` gate).
+
+## 7. Deliverables per phase (single pass)
+
+1. Enable Cloud + schema migration + auth config.
+2. Design tokens + shell layout + sidebar.
+3. Auth page + Google sign-in.
+4. Words CRUD + AI Add Word flow + drawer.
+5. TTS route + speaker button.
+6. Quiz flow + status auto-progression.
+7. Statistics + Tags + Settings pages.
+8. Head metadata + polish + smoke test via Playwright.
