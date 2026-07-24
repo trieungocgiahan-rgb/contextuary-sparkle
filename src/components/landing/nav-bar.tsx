@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Sparkle } from "./decorations";
+import logoAsset from "@/assets/contextuary-logo.jpeg.asset.json";
+
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -26,10 +27,11 @@ export function NavBar() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <a href="#top" className="flex items-center gap-1.5 text-lg font-semibold text-foreground">
+        <a href="#top" className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <img src={logoAsset.url} alt="Contextuary logo" className="h-8 w-8 rounded-lg" />
           Contextuary
-          <Sparkle className="text-primary" size={14} />
         </a>
+
         <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((l) => (
             <a
