@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Twitter, Instagram, Youtube, MessageCircle } from "lucide-react";
 import { Sparkle } from "./decorations";
+import logoAsset from "@/assets/contextuary-logo.jpeg.asset.json";
+
 
 const COLUMNS = [
   {
@@ -62,9 +64,11 @@ export function Footer() {
             </div>
           ))}
           <div>
-            <div className="flex items-center gap-1.5 text-sm font-semibold">
-              Contextuary <Sparkle className="text-sidebar-primary" size={10} />
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <img src={logoAsset.url} alt="" className="h-5 w-5 rounded" />
+              Contextuary
             </div>
+
             <p className="mt-3 text-sm opacity-70">
               Understand words.
               <br />
