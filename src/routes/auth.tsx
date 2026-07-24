@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import logoAsset from "@/assets/contextuary-logo.jpeg.asset.json";
+import { ArrowRight, Shield, Sparkles, Heart } from "lucide-react";
+import logoFlat from "@/assets/contextuary-logo.jpeg.asset.json";
+import logo3d from "@/assets/contextuary-logo-3d.jpeg.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -30,15 +32,55 @@ function GoogleIcon() {
   );
 }
 
+const FLOAT_WORDS = [
+  { word: "eloquent", x: "18%", y: "8%", rotate: -8, delay: 0 },
+  { word: "nuance", x: "45%", y: "14%", rotate: 6, delay: 0.4 },
+  { word: "ambiguous", x: "2%", y: "28%", rotate: -12, delay: 0.8 },
+  { word: "resilient", x: "58%", y: "30%", rotate: 10, delay: 1.2 },
+  { word: "lucid", x: "68%", y: "50%", rotate: -6, delay: 0.6 },
+  { word: "ephemeral", x: "8%", y: "82%", rotate: 4, delay: 1.6 },
+  { word: "meticulous", x: "40%", y: "86%", rotate: -4, delay: 1.0 },
+];
+
+const SPARKLES = [
+  { x: "22%", y: "22%", size: 14, delay: 0 },
+  { x: "55%", y: "20%", size: 20, delay: 0.5 },
+  { x: "12%", y: "48%", size: 12, delay: 1 },
+  { x: "62%", y: "68%", size: 16, delay: 1.5 },
+  { x: "30%", y: "70%", size: 10, delay: 0.7 },
+  { x: "48%", y: "44%", size: 8, delay: 1.2 },
+];
+
+const QUOTES = [
+  { text: "Words are the keys to understanding the world.", author: "More than memorization, it's mastery." },
+  { text: "Context is everything — meaning lives between the lines.", author: "Learn how words breathe." },
+  { text: "A larger vocabulary is a larger world.", author: "One word at a time." },
+  { text: "Read closely. Think clearly. Write beautifully.", author: "The Contextuary way." },
+];
+
+function SparkleIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M12 2l1.8 6.4L20 10l-6.2 1.6L12 18l-1.8-6.4L4 10l6.2-1.6L12 2z" />
+    </svg>
+  );
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [quoteIdx, setQuoteIdx] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/words", replace: true });
     });
   }, [navigate]);
+
+  useEffect(() => {
+    const id = setInterval(() => setQuoteIdx((i) => (i + 1) % QUOTES.length), 5000);
+    return () => clearInterval(id);
+  }, []);
 
   async function google() {
     setLoading(true);
@@ -55,33 +97,201 @@ function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
-          <img src={logoAsset.url} alt="Contextuary logo" className="h-9 w-9 rounded-lg" />
-          <span className="text-2xl font-bold tracking-tight">Contextuary</span>
-        </Link>
-        <Card className="border-border/60 shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle>Welcome</CardTitle>
-            <CardDescription>Understand words. In context. For real.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4 pt-2">
-            <Button
-              onClick={google}
-              disabled={loading}
-              size="lg"
-              className="w-full gap-3 bg-foreground text-background hover:bg-foreground/90"
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      {/* Animated gradient backdrop */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        animate={{
+          background: [
+            "radial-gradient(1000px 600px at 15% 20%, oklch(0.94 0.06 300 / 0.7), transparent 60%), radial-gradient(900px 700px at 85% 80%, oklch(0.92 0.08 285 / 0.55), transparent 60%)",
+            "radial-gradient(1000px 600px at 25% 40%, oklch(0.94 0.06 300 / 0.7), transparent 60%), radial-gradient(900px 700px at 75% 60%, oklch(0.92 0.08 285 / 0.55), transparent 60%)",
+            "radial-gradient(1000px 600px at 15% 20%, oklch(0.94 0.06 300 / 0.7), transparent 60%), radial-gradient(900px 700px at 85% 80%, oklch(0.92 0.08 285 / 0.55), transparent 60%)",
+          ],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 lg:py-12"
+      >
+        <div className="grid flex-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          {/* LEFT — hero illustration */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="relative hidden aspect-square w-full max-w-xl lg:block"
+          >
+            {/* Orbital dashed ring */}
+            <svg className="absolute inset-0 h-full w-full text-primary/25" viewBox="0 0 400 400" fill="none" aria-hidden>
+              <ellipse cx="200" cy="210" rx="185" ry="65" stroke="currentColor" strokeWidth="1" strokeDasharray="3 5" />
+            </svg>
+
+            {/* Floating SAT words */}
+            {FLOAT_WORDS.map((w) => (
+              <motion.span
+                key={w.word}
+                className="absolute font-serif italic text-primary/50"
+                style={{ left: w.x, top: w.y, fontSize: 22, transform: `rotate(${w.rotate}deg)` }}
+                animate={{ y: [0, -10, 0], opacity: [0.5, 0.9, 0.5] }}
+                transition={{ duration: 6 + w.delay, repeat: Infinity, ease: "easeInOut", delay: w.delay }}
+              >
+                {w.word}
+              </motion.span>
+            ))}
+
+            {/* Sparkles */}
+            {SPARKLES.map((s, i) => (
+              <motion.div
+                key={i}
+                className="absolute text-primary/60"
+                style={{ left: s.x, top: s.y }}
+                animate={{ scale: [0.6, 1.1, 0.6], opacity: [0.3, 0.9, 0.3], rotate: [0, 90, 0] }}
+                transition={{ duration: 5 + i, repeat: Infinity, ease: "easeInOut", delay: s.delay }}
+              >
+                <SparkleIcon size={s.size} />
+              </motion.div>
+            ))}
+
+            {/* 3D logo — treated as hero art (blended into lavender bg) */}
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center"
+              animate={{ y: [0, -12, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             >
-              <GoogleIcon />
-              Continue with Google
-            </Button>
-            <p className="text-center text-xs text-muted-foreground">
-              By continuing, you agree to our Terms and Privacy Policy.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="relative">
+                <div className="absolute inset-0 -z-10 rounded-full bg-primary/20 blur-3xl" />
+                <img
+                  src={logo3d.url}
+                  alt=""
+                  aria-hidden
+                  className="h-[380px] w-[380px] object-contain mix-blend-multiply drop-shadow-[0_25px_45px_rgba(103,51,220,0.35)]"
+                />
+              </div>
+            </motion.div>
+
+            {/* Pedestal glow */}
+            <div className="absolute bottom-[8%] left-1/2 h-6 w-64 -translate-x-1/2 rounded-full bg-primary/15 blur-2xl" />
+          </motion.div>
+
+          {/* RIGHT — auth card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mx-auto w-full max-w-lg"
+          >
+            <div className="rounded-3xl border border-border/60 bg-card/90 p-8 shadow-[0_30px_80px_-30px_rgba(103,51,220,0.35)] backdrop-blur-sm sm:p-10">
+              {/* Logo + wordmark */}
+              <Link to="/" className="flex items-center justify-center gap-3">
+                <img src={logoFlat.url} alt="Contextuary logo" className="h-11 w-11 object-contain" />
+                <span className="text-3xl font-bold tracking-tight text-foreground">Contextuary</span>
+                <SparkleIcon size={18} className="text-primary" />
+              </Link>
+
+              <p className="mt-4 text-center text-base text-muted-foreground">
+                Understand words. In context.{" "}
+                <span className="font-semibold text-primary">For real.</span>
+              </p>
+
+              {/* Info chip */}
+              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                  <SparkleIcon size={16} />
+                </div>
+                <p className="text-sm leading-relaxed text-foreground/80">
+                  Your AI-powered SAT vocabulary companion.
+                  <br className="hidden sm:block" /> Learn smarter, remember longer.
+                </p>
+              </div>
+
+              {/* Google button */}
+              <motion.div whileHover={{ y: -1 }} transition={{ duration: 0.2 }} className="mt-6">
+                <Button
+                  onClick={google}
+                  disabled={loading}
+                  size="lg"
+                  variant="outline"
+                  className="group w-full justify-between rounded-2xl border-2 border-primary bg-card px-5 py-6 text-base font-semibold text-foreground shadow-sm hover:bg-primary/5"
+                >
+                  <span className="flex items-center gap-3">
+                    <GoogleIcon />
+                    <span className="text-primary">
+                      {loading ? "Connecting…" : "Continue with Google"}
+                    </span>
+                  </span>
+                  <ArrowRight className="h-5 w-5 text-primary transition-transform group-hover:translate-x-1" />
+                </Button>
+              </motion.div>
+
+              {/* Feature trio */}
+              <div className="mt-8 grid grid-cols-3 gap-4 border-t border-border/60 pt-6">
+                {[
+                  { Icon: Shield, title: "Private & Secure", desc: "Your data is encrypted and never shared." },
+                  { Icon: Sparkles, title: "AI-Powered", desc: "Smart explanations tailored to you." },
+                  { Icon: Heart, title: "Made for You", desc: "Your personal vocabulary library, anywhere." },
+                ].map(({ Icon, title, desc }) => (
+                  <div key={title} className="flex flex-col items-center text-center">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="mt-2 text-xs font-semibold text-foreground">{title}</div>
+                    <div className="mt-1 text-[11px] leading-snug text-muted-foreground">{desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quote carousel */}
+            <div className="mt-6 rounded-2xl border border-border/60 bg-card/70 p-5 backdrop-blur-sm">
+              <div className="flex items-start gap-3">
+                <span className="font-serif text-2xl leading-none text-primary">“</span>
+                <div className="min-h-[48px] flex-1">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={quoteIdx}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.35 }}
+                      className="text-center text-sm text-foreground/80"
+                    >
+                      <p>{QUOTES[quoteIdx].text}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">— {QUOTES[quoteIdx].author}</p>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
+              <div className="mt-3 flex justify-center gap-1.5">
+                {QUOTES.map((_, i) => (
+                  <button
+                    key={i}
+                    aria-label={`Quote ${i + 1}`}
+                    onClick={() => setQuoteIdx(i)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === quoteIdx ? "w-5 bg-primary" : "w-1.5 bg-primary/25"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
+          <p>© {new Date().getFullYear()} Contextuary. All rights reserved.</p>
+          <div className="flex items-center gap-5">
+            <Link to="/" className="hover:text-foreground">Privacy</Link>
+            <Link to="/" className="hover:text-foreground">Terms</Link>
+            <Link to="/" className="hover:text-foreground">Contact</Link>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
