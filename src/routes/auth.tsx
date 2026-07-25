@@ -78,11 +78,11 @@ function AuthPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
+    <div className="relative min-h-screen overflow-hidden">
       {/* Background illustration */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center lg:bg-[position:50%_100%]"
+        className="pointer-events-none absolute inset-0 bg-cover bg-center lg:bg-[position:50%_100%]"
         style={{ backgroundImage: `url(${signinBg.url})` }}
       />
 
