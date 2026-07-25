@@ -90,7 +90,7 @@ function AuthPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 lg:py-12"
+        className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 lg:py-12"
       >
         <div className="flex flex-1 items-center justify-center lg:justify-end">
           {/* RIGHT — auth card */}
