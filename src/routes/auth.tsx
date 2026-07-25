@@ -80,18 +80,11 @@ function AuthPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       {/* Background illustration */}
-      <motion.div
+      <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <img
-          src={signinBg.url}
-          alt=""
-          className="h-full w-full object-cover object-center lg:object-bottom"
-        />
-      </motion.div>
+        className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-center lg:bg-[position:50%_100%]"
+        style={{ backgroundImage: `url(${signinBg.url})` }}
+      />
 
       <motion.div
         initial={{ opacity: 0 }}
