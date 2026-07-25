@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ArrowRight, Shield, Sparkles, Heart } from "lucide-react";
 import logoFlat from "@/assets/contextuary-logo.jpeg.asset.json";
-import logo3d from "@/assets/contextuary-logo-3d.jpeg.asset.json";
+import signinBg from "@/assets/signin-bg.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -31,25 +31,6 @@ function GoogleIcon() {
     </svg>
   );
 }
-
-const FLOAT_WORDS = [
-  { word: "eloquent", x: "18%", y: "8%", rotate: -8, delay: 0 },
-  { word: "nuance", x: "45%", y: "14%", rotate: 6, delay: 0.4 },
-  { word: "ambiguous", x: "2%", y: "28%", rotate: -12, delay: 0.8 },
-  { word: "resilient", x: "58%", y: "30%", rotate: 10, delay: 1.2 },
-  { word: "lucid", x: "68%", y: "50%", rotate: -6, delay: 0.6 },
-  { word: "ephemeral", x: "8%", y: "82%", rotate: 4, delay: 1.6 },
-  { word: "meticulous", x: "40%", y: "86%", rotate: -4, delay: 1.0 },
-];
-
-const SPARKLES = [
-  { x: "22%", y: "22%", size: 14, delay: 0 },
-  { x: "55%", y: "20%", size: 20, delay: 0.5 },
-  { x: "12%", y: "48%", size: 12, delay: 1 },
-  { x: "62%", y: "68%", size: 16, delay: 1.5 },
-  { x: "30%", y: "70%", size: 10, delay: 0.7 },
-  { x: "48%", y: "44%", size: 8, delay: 1.2 },
-];
 
 const QUOTES = [
   { text: "Words are the keys to understanding the world.", author: "More than memorization, it's mastery." },
@@ -97,93 +78,27 @@ function AuthPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      {/* Animated gradient backdrop */}
-      <motion.div
+    <div className="relative isolate min-h-screen overflow-hidden bg-background">
+      {/* Background illustration */}
+      <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        animate={{
-          background: [
-            "radial-gradient(1000px 600px at 15% 20%, oklch(0.94 0.06 300 / 0.7), transparent 60%), radial-gradient(900px 700px at 85% 80%, oklch(0.92 0.08 285 / 0.55), transparent 60%)",
-            "radial-gradient(1000px 600px at 25% 40%, oklch(0.94 0.06 300 / 0.7), transparent 60%), radial-gradient(900px 700px at 75% 60%, oklch(0.92 0.08 285 / 0.55), transparent 60%)",
-            "radial-gradient(1000px 600px at 15% 20%, oklch(0.94 0.06 300 / 0.7), transparent 60%), radial-gradient(900px 700px at 85% 80%, oklch(0.92 0.08 285 / 0.55), transparent 60%)",
-          ],
-        }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute inset-0 bg-cover bg-center lg:bg-[position:50%_100%]"
+        style={{ backgroundImage: `url(${signinBg.url})` }}
       />
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 lg:py-12"
+        className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 lg:py-12"
       >
-        <div className="grid flex-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
-          {/* LEFT — hero illustration */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="relative hidden aspect-square w-full max-w-xl lg:block"
-          >
-            {/* Orbital dashed ring */}
-            <svg className="absolute inset-0 h-full w-full text-primary/25" viewBox="0 0 400 400" fill="none" aria-hidden>
-              <ellipse cx="200" cy="210" rx="185" ry="65" stroke="currentColor" strokeWidth="1" strokeDasharray="3 5" />
-            </svg>
-
-            {/* Floating SAT words */}
-            {FLOAT_WORDS.map((w) => (
-              <motion.span
-                key={w.word}
-                className="absolute font-serif italic text-primary/50"
-                style={{ left: w.x, top: w.y, fontSize: 22, transform: `rotate(${w.rotate}deg)` }}
-                animate={{ y: [0, -10, 0], opacity: [0.5, 0.9, 0.5] }}
-                transition={{ duration: 6 + w.delay, repeat: Infinity, ease: "easeInOut", delay: w.delay }}
-              >
-                {w.word}
-              </motion.span>
-            ))}
-
-            {/* Sparkles */}
-            {SPARKLES.map((s, i) => (
-              <motion.div
-                key={i}
-                className="absolute text-primary/60"
-                style={{ left: s.x, top: s.y }}
-                animate={{ scale: [0.6, 1.1, 0.6], opacity: [0.3, 0.9, 0.3], rotate: [0, 90, 0] }}
-                transition={{ duration: 5 + i, repeat: Infinity, ease: "easeInOut", delay: s.delay }}
-              >
-                <SparkleIcon size={s.size} />
-              </motion.div>
-            ))}
-
-            {/* 3D logo — treated as hero art (blended into lavender bg) */}
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center"
-              animate={{ y: [0, -12, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <div className="relative">
-                <div className="absolute inset-0 -z-10 rounded-full bg-primary/20 blur-3xl" />
-                <img
-                  src={logo3d.url}
-                  alt=""
-                  aria-hidden
-                  className="h-[380px] w-[380px] object-contain mix-blend-multiply drop-shadow-[0_25px_45px_rgba(103,51,220,0.35)]"
-                />
-              </div>
-            </motion.div>
-
-            {/* Pedestal glow */}
-            <div className="absolute bottom-[8%] left-1/2 h-6 w-64 -translate-x-1/2 rounded-full bg-primary/15 blur-2xl" />
-          </motion.div>
-
+        <div className="flex flex-1 items-center justify-center lg:justify-end">
           {/* RIGHT — auth card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto w-full max-w-lg"
+            className="w-full max-w-lg"
           >
             <div className="rounded-3xl border border-border/60 bg-card/90 p-8 shadow-[0_30px_80px_-30px_rgba(103,51,220,0.35)] backdrop-blur-sm sm:p-10">
               {/* Logo + wordmark */}
