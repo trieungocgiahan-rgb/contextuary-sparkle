@@ -89,7 +89,7 @@ function AuthPage() {
         <img
           src={signinBg.url}
           alt=""
-          className="h-full w-full object-cover object-center lg:object-[22%_center]"
+          className="h-full w-full object-cover object-center lg:object-bottom"
         />
       </motion.div>
 
