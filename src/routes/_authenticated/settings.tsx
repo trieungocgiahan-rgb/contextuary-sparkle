@@ -71,15 +71,26 @@ function SettingsPage() {
             <Input id="dn" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="dg">Daily goal (words)</Label>
-            <Input
-              id="dg"
-              type="number"
-              min={1}
-              max={100}
-              value={dailyGoal}
-              onChange={(e) => setDailyGoal(Number(e.target.value) || 10)}
-            />
+            <Label>Daily goal</Label>
+            <p className="text-xs text-muted-foreground">
+              How many words to add each day from Daily Picks.
+            </p>
+            <div className="mt-1 grid grid-cols-4 gap-2">
+              {[5, 10, 15, 20].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setDailyGoal(n)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                    dailyGoal === n
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                      : "border-border bg-background hover:border-primary/40 hover:bg-muted"
+                  }`}
+                >
+                  {n} words
+                </button>
+              ))}
+            </div>
           </div>
           <Button onClick={() => save.mutate()} disabled={save.isPending}>Save changes</Button>
         </CardContent>

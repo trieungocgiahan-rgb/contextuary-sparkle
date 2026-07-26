@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_progress: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          user_id: string
+          words_added: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          words_added?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          words_added?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -113,6 +140,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sat_words: {
+        Row: {
+          created_at: string
+          example_sentence: string | null
+          frequency_rank: number
+          id: string
+          memory_hint: string | null
+          pronunciation: string | null
+          updated_at: string
+          vietnamese_meaning: string | null
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          example_sentence?: string | null
+          frequency_rank: number
+          id?: string
+          memory_hint?: string | null
+          pronunciation?: string | null
+          updated_at?: string
+          vietnamese_meaning?: string | null
+          word: string
+        }
+        Update: {
+          created_at?: string
+          example_sentence?: string | null
+          frequency_rank?: number
+          id?: string
+          memory_hint?: string | null
+          pronunciation?: string | null
+          updated_at?: string
+          vietnamese_meaning?: string | null
+          word?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           color: string
@@ -207,7 +270,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      count_daily_picks: { Args: never; Returns: number }
+      list_daily_picks: {
+        Args: { _limit: number; _offset: number }
+        Returns: {
+          example_sentence: string
+          frequency_rank: number
+          id: string
+          memory_hint: string
+          pronunciation: string
+          vietnamese_meaning: string
+          word: string
+        }[]
+      }
     }
     Enums: {
       word_status: "new" | "learning" | "reviewing" | "mastered"

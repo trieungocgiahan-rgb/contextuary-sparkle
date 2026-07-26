@@ -17,7 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { WordDetailsDrawer } from "@/components/word-details-drawer";
+import { DailyPicksBar } from "@/components/daily-picks-bar";
+import type { SatWord } from "@/lib/daily-picks.functions";
 
 export const Route = createFileRoute("/_authenticated/words")({
   head: () => ({
@@ -40,6 +43,7 @@ function WordsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [previewSat, setPreviewSat] = useState<SatWord | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [newWord, setNewWord] = useState("");
   const [busy, setBusy] = useState(false);
@@ -152,6 +156,8 @@ function WordsPage() {
           </Dialog>
         </div>
       </header>
+
+      <DailyPicksBar onPreview={setPreviewSat} />
 
       <div className="mb-4 rounded-2xl bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
@@ -285,6 +291,69 @@ function WordsPage() {
         onUpdate={(patch) => selected && updateMut.mutate({ id: selected.id, patch })}
         onDelete={() => selected && deleteMut.mutate(selected.id)}
       />
+
+      <SatPreviewSheet
+        word={previewSat}
+        onOpenChange={(o) => !o && setPreviewSat(null)}
+      />
     </div>
   );
 }
+
+
+
+function SatPreviewSheet({
+  word,
+  onOpenChange,
+}: {
+  word: SatWord | null;
+  onOpenChange: (o: boolean) => void;
+}) {
+  if (!word) return null;
+  return (
+    <Sheet open={!!word} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <div className="flex items-baseline gap-3">
+            <SheetTitle className="text-3xl font-bold">{word.word}</SheetTitle>
+            {word.pronunciation && (
+              <span className="text-sm text-muted-foreground">{word.pronunciation}</span>
+            )}
+          </div>
+          {word.vietnamese_meaning && (
+            <SheetDescription className="text-base font-medium text-foreground">
+              {word.vietnamese_meaning}
+            </SheetDescription>
+          )}
+        </SheetHeader>
+        <div className="mt-4 space-y-4 text-sm">
+          <div className="rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary inline-block">
+            #{word.frequency_rank} in the SAT bank
+          </div>
+          {word.example_sentence && (
+            <div>
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Example
+              </div>
+              <p className="rounded-lg bg-muted/40 p-3">{word.example_sentence}</p>
+            </div>
+          )}
+          {word.memory_hint && (
+            <div>
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Memory hint
+              </div>
+              <p className="rounded-lg border border-dashed p-3 italic text-muted-foreground">
+                {word.memory_hint}
+              </p>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Tap the + on the chip to add this word to your library.
+          </p>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
