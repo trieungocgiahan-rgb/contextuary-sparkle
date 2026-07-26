@@ -270,6 +270,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_enrich_sat_word: {
+        Args: {
+          _example_sentence: string
+          _id: string
+          _memory_hint: string
+          _pronunciation: string
+          _vietnamese_meaning: string
+        }
+        Returns: undefined
+      }
+      admin_upsert_sat_word: {
+        Args: { _rank: number; _word: string }
+        Returns: string
+      }
       count_daily_picks: { Args: never; Returns: number }
       list_daily_picks: {
         Args: { _limit: number; _offset: number }
