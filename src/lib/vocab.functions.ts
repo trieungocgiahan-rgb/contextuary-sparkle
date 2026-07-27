@@ -14,18 +14,20 @@ export type WordRow = {
   memory_hint: string | null;
   status: "new" | "learning" | "reviewing" | "mastered";
   tag_id: string | null;
+  part_of_speech: string | null;
   is_favorite: boolean;
   created_at: string;
 };
+
+const SELECT_COLS =
+  "id, word, ipa, vietnamese_meaning, nuance_note, examples, collocations, synonyms, antonyms, memory_hint, status, tag_id, part_of_speech, is_favorite, created_at";
 
 export const listWords = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<WordRow[]> => {
     const { data, error } = await context.supabase
       .from("words")
-      .select(
-        "id, word, ipa, vietnamese_meaning, nuance_note, examples, collocations, synonyms, antonyms, memory_hint, status, tag_id, is_favorite, created_at",
-      )
+      .select(SELECT_COLS)
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw error;
@@ -52,6 +54,7 @@ export const createWord = createServerFn({ method: "POST" })
       memory_hint: data.memory_hint ?? null,
       status: data.status ?? "new",
       tag_id: data.tag_id ?? null,
+      part_of_speech: data.part_of_speech ?? null,
       is_favorite: data.is_favorite ?? false,
     };
     const { data: inserted, error } = await context.supabase
@@ -148,6 +151,16 @@ export const deleteTag = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const STATUS_ORDER = ["new", "learning", "reviewing", "mastered"] as const;
+type Status = (typeof STATUS_ORDER)[number];
+
+export type StatusChange = {
+  word_id: string;
+  word: string;
+  from: Status;
+  to: Status;
+};
+
 export const saveQuizResult = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
@@ -155,7 +168,7 @@ export const saveQuizResult = createServerFn({ method: "POST" })
       results: { word_id: string; correct: boolean; question_type: string }[];
     }) => input,
   )
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }): Promise<{ quizId: string; score: number; total: number; changes: StatusChange[] }> => {
     const total = data.results.length;
     const score = data.results.filter((r) => r.correct).length;
     const { data: quiz, error: qErr } = await context.supabase
@@ -182,36 +195,36 @@ export const saveQuizResult = createServerFn({ method: "POST" })
       if (error) throw error;
     }
 
-    // Auto-progress status per word
-    const wordStats = new Map<string, { correct: number; total: number }>();
+    // Aggregate net movement per word: +1 correct, -1 wrong, clamp to [0, len-1] with floor at "new" (0)
+    const perWord = new Map<string, number>();
     for (const r of data.results) {
-      const s = wordStats.get(r.word_id) ?? { correct: 0, total: 0 };
-      s.total += 1;
-      if (r.correct) s.correct += 1;
-      wordStats.set(r.word_id, s);
+      perWord.set(r.word_id, (perWord.get(r.word_id) ?? 0) + (r.correct ? 1 : -1));
     }
-    for (const [wordId, s] of wordStats) {
+
+    const changes: StatusChange[] = [];
+    for (const [wordId, delta] of perWord) {
       const { data: w } = await context.supabase
         .from("words")
-        .select("status")
+        .select("status, word")
         .eq("id", wordId)
         .eq("user_id", context.userId)
         .maybeSingle();
       if (!w) continue;
-      const order = ["new", "learning", "reviewing", "mastered"] as const;
-      let idx = order.indexOf(w.status);
-      if (s.correct === s.total && s.total > 0) idx = Math.min(order.length - 1, idx + 1);
-      else if (s.correct === 0) idx = Math.max(1, idx);
-      const next = order[idx];
-      if (next !== w.status) {
+      const fromIdx = STATUS_ORDER.indexOf(w.status as Status);
+      const step = delta > 0 ? 1 : delta < 0 ? -1 : 0;
+      const nextIdx = Math.max(0, Math.min(STATUS_ORDER.length - 1, fromIdx + step));
+      const from = STATUS_ORDER[fromIdx];
+      const to = STATUS_ORDER[nextIdx];
+      if (from !== to) {
         await context.supabase
           .from("words")
-          .update({ status: next })
+          .update({ status: to })
           .eq("id", wordId)
           .eq("user_id", context.userId);
+        changes.push({ word_id: wordId, word: w.word, from, to });
       }
     }
-    return { quizId: quiz.id, score, total };
+    return { quizId: quiz.id, score, total, changes };
   });
 
 export type Stats = {
@@ -306,7 +319,7 @@ export const getProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("profiles")
-      .select("id, display_name, daily_goal, theme")
+      .select("id, display_name, daily_goal, theme, show_timer")
       .eq("id", context.userId)
       .maybeSingle();
     if (error) throw error;
@@ -316,7 +329,7 @@ export const getProfile = createServerFn({ method: "GET" })
 export const updateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { display_name?: string; daily_goal?: number; theme?: string }) => input,
+    (input: { display_name?: string; daily_goal?: number; theme?: string; show_timer?: boolean }) => input,
   )
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
@@ -327,4 +340,36 @@ export const updateProfile = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
     return row;
+  });
+
+// Fallback words for quiz distractors
+export type FallbackSatWord = {
+  word: string;
+  vietnamese_meaning: string | null;
+  part_of_speech: string | null;
+};
+
+export const listFallbackWords = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<FallbackSatWord[]> => {
+    const { data, error } = await context.supabase
+      .from("sat_words")
+      .select("word, vietnamese_meaning, part_of_speech")
+      .not("vietnamese_meaning", "is", null)
+      .eq("needs_review", false)
+      .limit(300);
+    if (error) throw error;
+    return (data ?? []) as FallbackSatWord[];
+  });
+
+// Admin
+export const isAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<boolean> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (context.supabase as any).rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    return !!data;
   });

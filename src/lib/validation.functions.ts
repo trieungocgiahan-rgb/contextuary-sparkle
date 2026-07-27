@@ -30,14 +30,11 @@ async function lookupDictionary(word: string): Promise<{ found: boolean; pos?: s
 }
 
 // Try to find a close suggestion using the sat_words bank.
-async function suggestFromBank(
-  supabase: { rpc: (...args: unknown[]) => unknown; from: (t: string) => unknown },
-  word: string,
-): Promise<string | undefined> {
-  // Fetch a candidate window via prefix.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function suggestFromBank(supabase: any, word: string): Promise<string | undefined> {
   const prefix = word.slice(0, 2);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const q: any = await (supabase.from("sat_words") as any)
+  const q = await supabase
+    .from("sat_words")
     .select("word")
     .ilike("word", `${prefix}%`)
     .limit(400);
