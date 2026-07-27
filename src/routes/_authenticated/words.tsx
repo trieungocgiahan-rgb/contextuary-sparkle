@@ -137,8 +137,8 @@ function WordsPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => navigate({ to: "/quiz" })}>
-            <Sparkles className="mr-2 h-4 w-4" /> Start Quiz
+          <Button variant="outline" onClick={() => setPracticeOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" /> Practice
           </Button>
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
