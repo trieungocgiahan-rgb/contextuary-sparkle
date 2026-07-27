@@ -1,61 +1,101 @@
 
-## 1. Shared SAT word bank
+# Contextuary Practice Rebuild
 
-New table `public.sat_words` (public-readable, admin-writable):
-- `word` (unique, lowercase), `pronunciation` (IPA), `vietnamese_meaning`, `example_sentence`, `memory_hint`, `frequency_rank` (unique, 1 = most common), timestamps.
-- GRANT SELECT to `anon, authenticated`; ALL to `service_role`.
-- RLS on; policy: anyone can SELECT; no INSERT/UPDATE/DELETE policy (only service_role writes via seeding function).
+Big scope — laying it out before writing. Confirm and I'll ship it.
 
-**Seeding (one-time, idempotent):**
-- Curate a 1000-word SAT list (from a well-known public list, e.g. Manhattan/Barron high-frequency set) and commit as `scripts/sat-words-1000.json` (word + rank only).
-- Add a protected server route `POST /api/public/seed-sat-words` guarded by `x-seed-secret` header matching a new `SAT_SEED_SECRET`. It:
-  1. Reads the JSON list and inserts any missing `word/rank` rows (no AI content yet).
-  2. Fetches up to N rows where `vietnamese_meaning IS NULL`, processes in batches of 20 through Gemini via the AI Gateway with a strict Zod schema (`{ ipa, vietnamese_meaning, example_sentence, memory_hint }[]`), and updates rows by word.
-  3. Returns `{ seeded, enriched, remaining }` so we can call it repeatedly until `remaining=0`.
-- Invoke it manually via curl after the migration runs; content generated once and stored — no AI at read time.
+## 1. Schema changes (one migration)
 
-## 2. Daily progress + goal
+- `sat_words`: add `part_of_speech text`, `synonyms text[] default '{}'`, `example_sentences text[] default '{}'`, `collocations text[] default '{}'`, `needs_review boolean default false`, `review_reason text`, `suggested_correction text`. Keep existing single `example_sentence` / `memory_hint` columns; new arrays are additive so the seeder can fill richer content without breaking the current UI.
+- `words` (user library): add `part_of_speech text` (for distractor matching).
+- New table `admin_seed_review` OR reuse `sat_words.needs_review` flag. Going with the flag on `sat_words` — simpler, one source of truth. `/admin/seed` reads `WHERE needs_review = true`.
+- Add admin RPCs: `admin_flag_sat_word(id, reason, suggestion)`, `admin_resolve_sat_word(id, action, new_word)`.
+- GRANTs + RLS as usual.
 
-New table `public.daily_progress`:
-- `user_id`, `date` (date, user local — sent from client), `words_added` (int, default 0), unique `(user_id, date)`.
-- RLS: user manages own rows. Standard grants.
-- Bumped in the same server fn that saves a Daily Pick.
+## 2. Validation
 
-`profiles.daily_goal` already exists. Settings page (`_authenticated/settings.tsx`): replace the number input with a Select of 5/10/15/20 (default 10). Copy: "Applies from tomorrow." No retroactive change to today's counter row.
+Server function `validateWord(word)` used by both manual add + seeder pipeline:
+- Lookup against a dictionary API (Free Dictionary API `api.dictionaryapi.dev` — no key). If 404 → not a real word.
+- If close-but-wrong (Levenshtein ≤ 2 to a known word from a small SAT wordlist we ship) → return `suggested_correction`.
+- SAT-level check: reject a small hardcoded stoplist of ~200 basic words (love, happy, run, big, …) — deterministic, no AI.
+- Manual-add UI: inline "Did you mean X?" with accept button; hard error for non-words; never call `generateWordDetails` unless validation passes.
+- Seeder: instead of dropping, write row with `needs_review=true` + reason + suggestion. `/admin/seed` surfaces these; approving replaces the word and re-enriches.
 
-## 3. Server functions (`src/lib/daily-picks.functions.ts`)
+## 3. Shared Word Picker (`src/components/practice-picker.tsx`)
 
-- `listDailyPicks({ offset, limit=20, tzDate })`: returns SAT bank rows ordered by `frequency_rank ASC`, excluding words the user already has (`NOT EXISTS` join on `words.word` case-insensitive for this user), with `offset/limit`. Also returns `{ total, hasMore }`.
-- `getDailyProgress({ tzDate })`: returns `{ words_added, daily_goal }`; upserts today's row lazily on read? No — read-only; a missing row means 0.
-- `addDailyPick({ satWordId, tzDate })`: within a single call —
-  - Load the SAT row.
-  - Insert into `words` for `auth.uid()` with `status='new'`, copying `word, ipa=pronunciation, vietnamese_meaning, examples=[example_sentence], memory_hint`.
-  - Upsert `daily_progress(user_id, tzDate)` incrementing `words_added`.
-  - Return the new word id + updated counter.
+Dialog opened from My Words ("Practice" button) and from sidebar. Fields:
+- **Mode**: Practice / AI Challenge (segmented, AI badge on the right).
+- **Type**: Quiz / Flashcards (Flashcards disabled under AI Challenge).
+- **Which words**: Selected (only if My Words has selection) / Today's new / All / By status (New/Learning/Reviewing/Mastered multiselect) / Favorites only.
+- **How many**: 10 / 20 / 50 / All (capped to 10 for AI Challenge, with note).
+- **Question types** (Quiz only, hidden for Flashcards): six checkboxes a–f, all on by default.
+- Start button → resolves word IDs → navigates to `/practice/quiz` or `/practice/flashcards` with session config in router state (or a `sessionStorage` key to survive reloads).
 
-## 4. UI: DailyPicksBar
+## 4. Standard Quiz (`src/routes/_authenticated/practice/quiz.tsx`)
 
-New `src/components/daily-picks-bar.tsx`, placed on `_authenticated/words.tsx` between header and the search card.
+- Pure client generator `src/lib/quiz-engine.ts`:
+  - Input: selected `WordRow[]`, library pool for distractors, `sat_words` fallback pool (fetched once), enabled types, target count.
+  - For each word, enumerate all possible questions across enabled types (skip types where content missing — no synonyms → no type e; no examples → no type c; etc.).
+  - Shuffle, take `count` (or all).
+  - Distractors: same-tag first, then rest of library, then `sat_words`. Filter out any option in the target's `synonyms`. For c/d also filter by matching `part_of_speech`.
+- HUD: exit, "Q x of N", progress bar, count-up timer (respects `profiles.show_timer`).
+- Feedback panel: correct/wrong, filled-in sentence, VN meaning, memory hint, speaker button (sentence).
+- Prev/Next; end screen with single score, time, per-type breakdown, missed-word list linking into `word-details-drawer`, status-change summary, three action buttons.
+- Status progression via updated `saveQuizResult`: one step forward per correct, one back per wrong, floor at "new". Aggregate per-word: majority correct → forward.
 
-- Container: white card, subtle border, rounded-2xl, light shadow.
-- Header row: sparkle icon + "Daily Picks" + `${added} / ${goal} added today`; right side: gear icon + "Daily goal: N" → links to `/settings`.
-- Chip row: horizontal scroll container, left/right circular arrow buttons that scroll the container by ~1 chip width; hidden native scrollbar.
-- Chip: purple gradient `linear-gradient(135deg,#6D3FEC,#8B5CF6)`, white text, rounded-xl, fixed width (~180px), padding so nothing clips vertically. Contents: word (bold), IPA (small), footer row with `#${rank} Most common`/`#${rank}` + circular white "+" button on the right.
-- Click chip body → open existing `WordDetailsDrawer` in read-only preview mode (reuse drawer; pass a synthetic `WordRow` shaped from the SAT row, disable Edit/Delete when it's not yet saved).
-- Click "+" → optimistic: chip flashes green, framer-motion `AnimatePresence` exit (fade + slide-out), then `addDailyPick` mutation; on success invalidate `["words"]`, `["daily-picks"]`, `["daily-progress"]`; on error rollback.
-- Infinite scroll: `useInfiniteQuery(["daily-picks", tzDate], listDailyPicks, getNextPageParam)`. IntersectionObserver on a right-edge sentinel triggers `fetchNextPage`. Loading shimmer chip while fetching.
-- Empty/terminal state: when `pages` flattened is empty and no more pages → single-line "You've added every word 🎉".
-- Timezone: compute `tzDate` on client as `new Date().toLocaleDateString('en-CA')` (YYYY-MM-DD in user's local tz) and pass to every daily-picks call.
+## 5. Flashcards (`src/routes/_authenticated/practice/flashcards.tsx`)
 
-## 5. Wiring
+- Full-screen. Deck = array; "Chưa nhớ" pushes to end, "Đã nhớ" retires. Progress = retired/total.
+- Flip animation on click; keyboard: space/arrows/1/2.
+- End screen: known/unknown, "Practice unknown again" restarts with unknown set. No status writes.
 
-- Add queries in `src/lib/queries.ts`: `dailyProgressQueryOptions(tzDate)`, `dailyPicksInfiniteQueryOptions(tzDate)`.
-- Words page: render `<DailyPicksBar />` above search block. No other changes.
-- Settings: swap daily-goal input for a Select (5/10/15/20).
+## 6. Audio (`src/lib/speech.ts`)
 
-## Technical notes
+Thin `speechSynthesis` wrapper: picks first en-US voice, `speak(text)`, `cancel()`. Speaker button component. Autoplay on question type f. Retire `src/routes/api/tts.ts` and `src/lib/tts.ts` from practice paths (leave file until unused).
 
-- Exclusion in SQL: `SELECT s.* FROM sat_words s WHERE NOT EXISTS (SELECT 1 FROM words w WHERE w.user_id = auth.uid() AND lower(w.word) = s.word) ORDER BY s.frequency_rank OFFSET $1 LIMIT $2` — executed through `requireSupabaseAuth` server fn using `context.supabase.rpc('list_daily_picks', {...})` (define a SQL function to keep the NOT EXISTS clause simple and set-based), or a plain `.from('sat_words').select().not('word','in', <subquery>)` — RPC is cleaner, so add `public.list_daily_picks(_offset int, _limit int)`.
-- Seeding function reuses `createGateway()` + `CHAT_MODEL` from `src/lib/ai-gateway.server.ts`; strict Zod validation; on batch failure, skip that batch and continue.
-- All new public tables get GRANTs + RLS in the same migration.
-- After migration approval: seed script curled from the sandbox in batches until `remaining=0`.
+## 7. AI Challenge (`src/routes/_authenticated/practice/ai.tsx`)
+
+Three exercise types, mixed to session cap 10:
+- **Passage in context**: server fn `generatePassage({wordIds})` → paragraph + comprehension MCQs. Cache 24h in `ai_challenge_cache` table keyed by sorted-wordIds hash + type.
+- **Write your own sentence**: user textarea → server fn `evaluateSentence({word, sentence})` returns `{verdict, feedback, fix}`.
+- **Spot the misuse**: server fn `generateMisusePair({word})` returns two sentences + which is correct + explanation.
+
+All server fns use existing `createGateway()` with a Gemini model. Loading skeletons. AI badge visible. Cap enforced client + server.
+
+## 8. Settings
+
+Add "Show timer during quizzes" toggle → `profiles.show_timer boolean default true`.
+
+## 9. Admin `/admin/seed`
+
+New route (gated by an `is_admin` check on `user_roles`, or just hidden from nav — user already runs as sole user). Table of `needs_review` rows: original word, reason, suggestion, actions (Approve suggestion / Edit / Delete). Uses `admin_resolve_sat_word` RPC.
+
+## 10. Files
+
+**New**
+- `src/components/practice-picker.tsx`
+- `src/components/speaker-button.tsx`
+- `src/lib/speech.ts`
+- `src/lib/quiz-engine.ts`
+- `src/lib/validation.ts` + `src/lib/validation.functions.ts`
+- `src/lib/ai-challenge.functions.ts`
+- `src/routes/_authenticated/practice/quiz.tsx`
+- `src/routes/_authenticated/practice/flashcards.tsx`
+- `src/routes/_authenticated/practice/ai.tsx`
+- `src/routes/_authenticated/admin/seed.tsx`
+
+**Edited**
+- `src/lib/vocab.functions.ts` — new status progression rule + validation gate on create
+- `src/routes/_authenticated/words.tsx` — checkbox column, Practice button opening picker, inline "Did you mean?"
+- `src/routes/_authenticated/settings.tsx` — timer toggle
+- `src/components/app-sidebar.tsx` — replace Quiz link with Practice → picker
+- `src/routes/_authenticated/quiz.tsx` — delete (or redirect to `/practice/quiz`)
+
+**Migration** — schema deltas above; seeder background job re-runs to fill new columns for existing rows.
+
+## 11. Open questions
+
+1. `part_of_speech` for existing user words: default null and skip the c/d POS filter when unknown, or backfill via a one-shot AI pass? I'll go with **skip filter when unknown** unless you say otherwise.
+2. Admin gate for `/admin/seed`: add a `user_roles` table + `has_role()` RPC and hardcode you as admin by email on first login, or just leave it path-hidden? I'll add proper roles.
+3. Existing seeder currently running — should I let it finish then re-enrich, or stop it and restart against the new schema? I'll **let it finish**, then run a follow-up pass to fill `part_of_speech` / `synonyms` / arrays and flag misspellings.
+
+Reply "go" (or with tweaks) and I'll execute end-to-end.
