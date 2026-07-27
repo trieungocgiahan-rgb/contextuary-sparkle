@@ -1,5 +1,5 @@
 import { queryOptions, infiniteQueryOptions } from "@tanstack/react-query";
-import { listWords, listTags, getStats, getProfile } from "./vocab.functions";
+import { listWords, listTags, getStats, getProfile, listFallbackWords, isAdmin } from "./vocab.functions";
 import { listDailyPicks, getDailyProgress } from "./daily-picks.functions";
 
 export const wordsQueryOptions = () =>
@@ -13,6 +13,12 @@ export const statsQueryOptions = () =>
 
 export const profileQueryOptions = () =>
   queryOptions({ queryKey: ["profile"], queryFn: () => getProfile() });
+
+export const fallbackWordsQueryOptions = () =>
+  queryOptions({ queryKey: ["fallback-words"], queryFn: () => listFallbackWords(), staleTime: 5 * 60_000 });
+
+export const isAdminQueryOptions = () =>
+  queryOptions({ queryKey: ["is-admin"], queryFn: () => isAdmin() });
 
 export const dailyProgressQueryOptions = (date: string) =>
   queryOptions({
