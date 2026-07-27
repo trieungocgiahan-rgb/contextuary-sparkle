@@ -322,6 +322,8 @@ function WordsPage() {
         word={previewSat}
         onOpenChange={(o) => !o && setPreviewSat(null)}
       />
+
+      <PracticePickerDialog open={practiceOpen} onOpenChange={setPracticeOpen} />
     </div>
   );
 }
