@@ -21,6 +21,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { WordDetailsDrawer } from "@/components/word-details-drawer";
 import { DailyPicksBar } from "@/components/daily-picks-bar";
 import type { SatWord } from "@/lib/daily-picks.functions";
+import { PracticePickerDialog } from "@/components/practice-picker";
+import { validateWord } from "@/lib/validation.functions";
 
 export const Route = createFileRoute("/_authenticated/words")({
   head: () => ({

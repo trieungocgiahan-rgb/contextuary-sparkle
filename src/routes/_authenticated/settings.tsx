@@ -94,6 +94,13 @@ function SettingsPage() {
               ))}
             </div>
           </div>
+          <div className="space-y-1.5">
+            <Label>Show timer during quizzes</Label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowTimer(true)} className={`rounded-lg border px-3 py-2 text-sm ${showTimer ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>Show</button>
+              <button type="button" onClick={() => setShowTimer(false)} className={`rounded-lg border px-3 py-2 text-sm ${!showTimer ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>Hide</button>
+            </div>
+          </div>
           <Button onClick={() => save.mutate()} disabled={save.isPending}>Save changes</Button>
         </CardContent>
       </Card>
