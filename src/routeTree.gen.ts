@@ -18,6 +18,10 @@ import { Route as AuthenticatedTagsRouteImport } from './routes/_authenticated/t
 import { Route as AuthenticatedStatisticsRouteImport } from './routes/_authenticated/statistics'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQuizRouteImport } from './routes/_authenticated/quiz'
+import { Route as AuthenticatedPracticeQuizRouteImport } from './routes/_authenticated/practice/quiz'
+import { Route as AuthenticatedPracticeFlashcardsRouteImport } from './routes/_authenticated/practice/flashcards'
+import { Route as AuthenticatedPracticeAiRouteImport } from './routes/_authenticated/practice/ai'
+import { Route as AuthenticatedAdminSeedRouteImport } from './routes/_authenticated/admin/seed'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -63,6 +67,28 @@ const AuthenticatedQuizRoute = AuthenticatedQuizRouteImport.update({
   path: '/quiz',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPracticeQuizRoute =
+  AuthenticatedPracticeQuizRouteImport.update({
+    id: '/practice/quiz',
+    path: '/practice/quiz',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPracticeFlashcardsRoute =
+  AuthenticatedPracticeFlashcardsRouteImport.update({
+    id: '/practice/flashcards',
+    path: '/practice/flashcards',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPracticeAiRoute = AuthenticatedPracticeAiRouteImport.update({
+  id: '/practice/ai',
+  path: '/practice/ai',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminSeedRoute = AuthenticatedAdminSeedRouteImport.update({
+  id: '/admin/seed',
+  path: '/admin/seed',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +99,10 @@ export interface FileRoutesByFullPath {
   '/tags': typeof AuthenticatedTagsRoute
   '/words': typeof AuthenticatedWordsRoute
   '/api/tts': typeof ApiTtsRoute
+  '/admin/seed': typeof AuthenticatedAdminSeedRoute
+  '/practice/ai': typeof AuthenticatedPracticeAiRoute
+  '/practice/flashcards': typeof AuthenticatedPracticeFlashcardsRoute
+  '/practice/quiz': typeof AuthenticatedPracticeQuizRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +113,10 @@ export interface FileRoutesByTo {
   '/tags': typeof AuthenticatedTagsRoute
   '/words': typeof AuthenticatedWordsRoute
   '/api/tts': typeof ApiTtsRoute
+  '/admin/seed': typeof AuthenticatedAdminSeedRoute
+  '/practice/ai': typeof AuthenticatedPracticeAiRoute
+  '/practice/flashcards': typeof AuthenticatedPracticeFlashcardsRoute
+  '/practice/quiz': typeof AuthenticatedPracticeQuizRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +129,10 @@ export interface FileRoutesById {
   '/_authenticated/tags': typeof AuthenticatedTagsRoute
   '/_authenticated/words': typeof AuthenticatedWordsRoute
   '/api/tts': typeof ApiTtsRoute
+  '/_authenticated/admin/seed': typeof AuthenticatedAdminSeedRoute
+  '/_authenticated/practice/ai': typeof AuthenticatedPracticeAiRoute
+  '/_authenticated/practice/flashcards': typeof AuthenticatedPracticeFlashcardsRoute
+  '/_authenticated/practice/quiz': typeof AuthenticatedPracticeQuizRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +145,10 @@ export interface FileRouteTypes {
     | '/tags'
     | '/words'
     | '/api/tts'
+    | '/admin/seed'
+    | '/practice/ai'
+    | '/practice/flashcards'
+    | '/practice/quiz'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +159,10 @@ export interface FileRouteTypes {
     | '/tags'
     | '/words'
     | '/api/tts'
+    | '/admin/seed'
+    | '/practice/ai'
+    | '/practice/flashcards'
+    | '/practice/quiz'
   id:
     | '__root__'
     | '/'
@@ -128,6 +174,10 @@ export interface FileRouteTypes {
     | '/_authenticated/tags'
     | '/_authenticated/words'
     | '/api/tts'
+    | '/_authenticated/admin/seed'
+    | '/_authenticated/practice/ai'
+    | '/_authenticated/practice/flashcards'
+    | '/_authenticated/practice/quiz'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -202,6 +252,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuizRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/practice/quiz': {
+      id: '/_authenticated/practice/quiz'
+      path: '/practice/quiz'
+      fullPath: '/practice/quiz'
+      preLoaderRoute: typeof AuthenticatedPracticeQuizRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/practice/flashcards': {
+      id: '/_authenticated/practice/flashcards'
+      path: '/practice/flashcards'
+      fullPath: '/practice/flashcards'
+      preLoaderRoute: typeof AuthenticatedPracticeFlashcardsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/practice/ai': {
+      id: '/_authenticated/practice/ai'
+      path: '/practice/ai'
+      fullPath: '/practice/ai'
+      preLoaderRoute: typeof AuthenticatedPracticeAiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/seed': {
+      id: '/_authenticated/admin/seed'
+      path: '/admin/seed'
+      fullPath: '/admin/seed'
+      preLoaderRoute: typeof AuthenticatedAdminSeedRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -211,6 +289,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStatisticsRoute: typeof AuthenticatedStatisticsRoute
   AuthenticatedTagsRoute: typeof AuthenticatedTagsRoute
   AuthenticatedWordsRoute: typeof AuthenticatedWordsRoute
+  AuthenticatedAdminSeedRoute: typeof AuthenticatedAdminSeedRoute
+  AuthenticatedPracticeAiRoute: typeof AuthenticatedPracticeAiRoute
+  AuthenticatedPracticeFlashcardsRoute: typeof AuthenticatedPracticeFlashcardsRoute
+  AuthenticatedPracticeQuizRoute: typeof AuthenticatedPracticeQuizRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -219,6 +301,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStatisticsRoute: AuthenticatedStatisticsRoute,
   AuthenticatedTagsRoute: AuthenticatedTagsRoute,
   AuthenticatedWordsRoute: AuthenticatedWordsRoute,
+  AuthenticatedAdminSeedRoute: AuthenticatedAdminSeedRoute,
+  AuthenticatedPracticeAiRoute: AuthenticatedPracticeAiRoute,
+  AuthenticatedPracticeFlashcardsRoute: AuthenticatedPracticeFlashcardsRoute,
+  AuthenticatedPracticeQuizRoute: AuthenticatedPracticeQuizRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
