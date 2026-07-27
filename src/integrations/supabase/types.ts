@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_challenge_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          id: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          id?: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_progress: {
         Row: {
           created_at: string
@@ -47,6 +71,7 @@ export type Database = {
           daily_goal: number
           display_name: string | null
           id: string
+          show_timer: boolean
           theme: string
           updated_at: string
         }
@@ -55,6 +80,7 @@ export type Database = {
           daily_goal?: number
           display_name?: string | null
           id: string
+          show_timer?: boolean
           theme?: string
           updated_at?: string
         }
@@ -63,6 +89,7 @@ export type Database = {
           daily_goal?: number
           display_name?: string | null
           id?: string
+          show_timer?: boolean
           theme?: string
           updated_at?: string
         }
@@ -142,34 +169,55 @@ export type Database = {
       }
       sat_words: {
         Row: {
+          collocations: string[]
           created_at: string
           example_sentence: string | null
+          example_sentences: string[]
           frequency_rank: number
           id: string
           memory_hint: string | null
+          needs_review: boolean
+          part_of_speech: string | null
           pronunciation: string | null
+          review_reason: string | null
+          suggested_correction: string | null
+          synonyms: string[]
           updated_at: string
           vietnamese_meaning: string | null
           word: string
         }
         Insert: {
+          collocations?: string[]
           created_at?: string
           example_sentence?: string | null
+          example_sentences?: string[]
           frequency_rank: number
           id?: string
           memory_hint?: string | null
+          needs_review?: boolean
+          part_of_speech?: string | null
           pronunciation?: string | null
+          review_reason?: string | null
+          suggested_correction?: string | null
+          synonyms?: string[]
           updated_at?: string
           vietnamese_meaning?: string | null
           word: string
         }
         Update: {
+          collocations?: string[]
           created_at?: string
           example_sentence?: string | null
+          example_sentences?: string[]
           frequency_rank?: number
           id?: string
           memory_hint?: string | null
+          needs_review?: boolean
+          part_of_speech?: string | null
           pronunciation?: string | null
+          review_reason?: string | null
+          suggested_correction?: string | null
+          synonyms?: string[]
           updated_at?: string
           vietnamese_meaning?: string | null
           word?: string
@@ -200,6 +248,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       words: {
         Row: {
           antonyms: string[]
@@ -211,6 +280,7 @@ export type Database = {
           is_favorite: boolean
           memory_hint: string | null
           nuance_note: string | null
+          part_of_speech: string | null
           status: Database["public"]["Enums"]["word_status"]
           synonyms: string[]
           tag_id: string | null
@@ -229,6 +299,7 @@ export type Database = {
           is_favorite?: boolean
           memory_hint?: string | null
           nuance_note?: string | null
+          part_of_speech?: string | null
           status?: Database["public"]["Enums"]["word_status"]
           synonyms?: string[]
           tag_id?: string | null
@@ -247,6 +318,7 @@ export type Database = {
           is_favorite?: boolean
           memory_hint?: string | null
           nuance_note?: string | null
+          part_of_speech?: string | null
           status?: Database["public"]["Enums"]["word_status"]
           synonyms?: string[]
           tag_id?: string | null
@@ -280,11 +352,36 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_flag_sat_word: {
+        Args: { _id: string; _reason: string; _suggestion: string }
+        Returns: undefined
+      }
+      admin_list_review_words: {
+        Args: never
+        Returns: {
+          frequency_rank: number
+          id: string
+          review_reason: string
+          suggested_correction: string
+          word: string
+        }[]
+      }
+      admin_resolve_sat_word: {
+        Args: { _action: string; _id: string; _new_word: string }
+        Returns: undefined
+      }
       admin_upsert_sat_word: {
         Args: { _rank: number; _word: string }
         Returns: string
       }
       count_daily_picks: { Args: never; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       list_daily_picks: {
         Args: { _limit: number; _offset: number }
         Returns: {
@@ -299,6 +396,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "user"
       word_status: "new" | "learning" | "reviewing" | "mastered"
     }
     CompositeTypes: {
@@ -427,6 +525,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       word_status: ["new", "learning", "reviewing", "mastered"],
     },
   },
