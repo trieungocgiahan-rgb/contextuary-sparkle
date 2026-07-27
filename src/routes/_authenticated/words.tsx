@@ -112,20 +112,6 @@ function WordsPage() {
           part_of_speech: v.partOfSpeech ?? null,
           tag_id: tag?.id ?? null,
           status: "new",
-      const tag = tags.find((t) => t.name.toLowerCase() === details.suggested_tag.toLowerCase());
-      const inserted = await create({
-        data: {
-          word: w,
-          ipa: details.ipa,
-          vietnamese_meaning: details.vietnamese_meaning,
-          nuance_note: details.nuance_note,
-          examples: details.examples,
-          collocations: details.collocations,
-          synonyms: details.synonyms,
-          antonyms: details.antonyms,
-          memory_hint: details.memory_hint,
-          tag_id: tag?.id ?? null,
-          status: "new",
         },
       });
       qc.invalidateQueries({ queryKey: ["words"] });
