@@ -49,11 +49,15 @@ function WordsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [newWord, setNewWord] = useState("");
   const [busy, setBusy] = useState(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [practiceOpen, setPracticeOpen] = useState(false);
 
   const create = useServerFn(createWord);
   const del = useServerFn(deleteWord);
   const upd = useServerFn(updateWord);
   const generate = useServerFn(generateWordDetails);
+  const validate = useServerFn(validateWord);
 
   const filtered = words.filter((w) => {
     if (search && !w.word.toLowerCase().includes(search.toLowerCase())) return false;
@@ -78,12 +82,36 @@ function WordsPage() {
     },
   });
 
-  async function handleAdd() {
-    const w = newWord.trim().toLowerCase();
+  async function handleAdd(overrideWord?: string) {
+    const w = (overrideWord ?? newWord).trim().toLowerCase();
     if (!w) return;
     setBusy(true);
+    setSuggestion(null);
+    setValidationError(null);
     try {
+      const v = await validate({ data: { word: w } });
+      if (!v.ok) {
+        setValidationError(v.message);
+        if (v.reason === "misspelled" && v.suggestion) setSuggestion(v.suggestion);
+        setBusy(false);
+        return;
+      }
       const details = await generate({ data: { word: w } });
+      const tag = tags.find((t) => t.name.toLowerCase() === details.suggested_tag.toLowerCase());
+      const inserted = await create({
+        data: {
+          word: w,
+          ipa: details.ipa,
+          vietnamese_meaning: details.vietnamese_meaning,
+          nuance_note: details.nuance_note,
+          examples: details.examples,
+          collocations: details.collocations,
+          synonyms: details.synonyms,
+          antonyms: details.antonyms,
+          memory_hint: details.memory_hint,
+          part_of_speech: v.partOfSpeech ?? null,
+          tag_id: tag?.id ?? null,
+          status: "new",
       const tag = tags.find((t) => t.name.toLowerCase() === details.suggested_tag.toLowerCase());
       const inserted = await create({
         data: {
