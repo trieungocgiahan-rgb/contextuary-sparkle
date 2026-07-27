@@ -32,16 +32,18 @@ function SettingsPage() {
   const upd = useServerFn(updateProfile);
   const [displayName, setDisplayName] = useState("");
   const [dailyGoal, setDailyGoal] = useState(10);
+  const [showTimer, setShowTimer] = useState(true);
 
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name ?? "");
       setDailyGoal(profile.daily_goal ?? 10);
+      setShowTimer((profile as { show_timer?: boolean }).show_timer ?? true);
     }
   }, [profile]);
 
   const save = useMutation({
-    mutationFn: () => upd({ data: { display_name: displayName, daily_goal: dailyGoal } }),
+    mutationFn: () => upd({ data: { display_name: displayName, daily_goal: dailyGoal, show_timer: showTimer } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
       toast.success("Saved");
@@ -90,6 +92,13 @@ function SettingsPage() {
                   {n} words
                 </button>
               ))}
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Show timer during quizzes</Label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowTimer(true)} className={`rounded-lg border px-3 py-2 text-sm ${showTimer ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>Show</button>
+              <button type="button" onClick={() => setShowTimer(false)} className={`rounded-lg border px-3 py-2 text-sm ${!showTimer ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>Hide</button>
             </div>
           </div>
           <Button onClick={() => save.mutate()} disabled={save.isPending}>Save changes</Button>

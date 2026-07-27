@@ -21,6 +21,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { WordDetailsDrawer } from "@/components/word-details-drawer";
 import { DailyPicksBar } from "@/components/daily-picks-bar";
 import type { SatWord } from "@/lib/daily-picks.functions";
+import { PracticePickerDialog } from "@/components/practice-picker";
+import { validateWord } from "@/lib/validation.functions";
 
 export const Route = createFileRoute("/_authenticated/words")({
   head: () => ({
@@ -47,11 +49,15 @@ function WordsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [newWord, setNewWord] = useState("");
   const [busy, setBusy] = useState(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [practiceOpen, setPracticeOpen] = useState(false);
 
   const create = useServerFn(createWord);
   const del = useServerFn(deleteWord);
   const upd = useServerFn(updateWord);
   const generate = useServerFn(generateWordDetails);
+  const validate = useServerFn(validateWord);
 
   const filtered = words.filter((w) => {
     if (search && !w.word.toLowerCase().includes(search.toLowerCase())) return false;
@@ -76,11 +82,20 @@ function WordsPage() {
     },
   });
 
-  async function handleAdd() {
-    const w = newWord.trim().toLowerCase();
+  async function handleAdd(overrideWord?: string) {
+    const w = (overrideWord ?? newWord).trim().toLowerCase();
     if (!w) return;
     setBusy(true);
+    setSuggestion(null);
+    setValidationError(null);
     try {
+      const v = await validate({ data: { word: w } });
+      if (!v.ok) {
+        setValidationError(v.message);
+        if (v.reason === "misspelled" && v.suggestion) setSuggestion(v.suggestion);
+        setBusy(false);
+        return;
+      }
       const details = await generate({ data: { word: w } });
       const tag = tags.find((t) => t.name.toLowerCase() === details.suggested_tag.toLowerCase());
       const inserted = await create({
@@ -94,6 +109,7 @@ function WordsPage() {
           synonyms: details.synonyms,
           antonyms: details.antonyms,
           memory_hint: details.memory_hint,
+          part_of_speech: v.partOfSpeech ?? null,
           tag_id: tag?.id ?? null,
           status: "new",
         },
@@ -121,8 +137,8 @@ function WordsPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => navigate({ to: "/quiz" })}>
-            <Sparkles className="mr-2 h-4 w-4" /> Start Quiz
+          <Button variant="outline" onClick={() => setPracticeOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" /> Practice
           </Button>
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
@@ -142,14 +158,24 @@ function WordsPage() {
                   onKeyDown={(e) => e.key === "Enter" && !busy && handleAdd()}
                   autoFocus
                 />
+                {validationError && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+                    {validationError}
+                    {suggestion && (
+                      <Button size="sm" variant="outline" className="ml-2" onClick={() => { setNewWord(suggestion); handleAdd(suggestion); }}>
+                        Use "{suggestion}"
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground">
-                  Contextuary will generate IPA, Vietnamese meaning, nuance note, examples and more.
+                  Contextuary will validate and generate IPA, meaning, examples and more.
                 </p>
               </div>
               <DialogFooter>
                 <Button variant="ghost" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</Button>
-                <Button onClick={handleAdd} disabled={busy || !newWord.trim()}>
-                  {busy ? "Generating…" : "Generate & Add"}
+                <Button onClick={() => handleAdd()} disabled={busy || !newWord.trim()}>
+                  {busy ? "Working…" : "Validate & Add"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -296,6 +322,8 @@ function WordsPage() {
         word={previewSat}
         onOpenChange={(o) => !o && setPreviewSat(null)}
       />
+
+      <PracticePickerDialog open={practiceOpen} onOpenChange={setPracticeOpen} />
     </div>
   );
 }

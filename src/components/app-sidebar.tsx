@@ -10,7 +10,7 @@ import { LineChart, Line, ResponsiveContainer } from "recharts";
 
 const NAV = [
   { to: "/words", label: "My Words", icon: BookOpen },
-  { to: "/quiz", label: "Quiz", icon: GraduationCap },
+  { to: "/practice/quiz", label: "Practice", icon: GraduationCap },
   { to: "/statistics", label: "Statistics", icon: BarChart3 },
   { to: "/tags", label: "Tags", icon: Tags },
   { to: "/settings", label: "Settings", icon: Settings },
