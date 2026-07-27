@@ -158,14 +158,24 @@ function WordsPage() {
                   onKeyDown={(e) => e.key === "Enter" && !busy && handleAdd()}
                   autoFocus
                 />
+                {validationError && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+                    {validationError}
+                    {suggestion && (
+                      <Button size="sm" variant="outline" className="ml-2" onClick={() => { setNewWord(suggestion); handleAdd(suggestion); }}>
+                        Use "{suggestion}"
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground">
-                  Contextuary will generate IPA, Vietnamese meaning, nuance note, examples and more.
+                  Contextuary will validate and generate IPA, meaning, examples and more.
                 </p>
               </div>
               <DialogFooter>
                 <Button variant="ghost" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</Button>
-                <Button onClick={handleAdd} disabled={busy || !newWord.trim()}>
-                  {busy ? "Generating…" : "Generate & Add"}
+                <Button onClick={() => handleAdd()} disabled={busy || !newWord.trim()}>
+                  {busy ? "Working…" : "Validate & Add"}
                 </Button>
               </DialogFooter>
             </DialogContent>
