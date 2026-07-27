@@ -17,7 +17,6 @@ import { Route as AuthenticatedWordsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTagsRouteImport } from './routes/_authenticated/tags'
 import { Route as AuthenticatedStatisticsRouteImport } from './routes/_authenticated/statistics'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedQuizRouteImport } from './routes/_authenticated/quiz'
 import { Route as AuthenticatedPracticeQuizRouteImport } from './routes/_authenticated/practice/quiz'
 import { Route as AuthenticatedPracticeFlashcardsRouteImport } from './routes/_authenticated/practice/flashcards'
 import { Route as AuthenticatedPracticeAiRouteImport } from './routes/_authenticated/practice/ai'
@@ -62,11 +61,6 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedQuizRoute = AuthenticatedQuizRouteImport.update({
-  id: '/quiz',
-  path: '/quiz',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedPracticeQuizRoute =
   AuthenticatedPracticeQuizRouteImport.update({
     id: '/practice/quiz',
@@ -93,7 +87,6 @@ const AuthenticatedAdminSeedRoute = AuthenticatedAdminSeedRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/quiz': typeof AuthenticatedQuizRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/statistics': typeof AuthenticatedStatisticsRoute
   '/tags': typeof AuthenticatedTagsRoute
@@ -107,7 +100,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/quiz': typeof AuthenticatedQuizRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/statistics': typeof AuthenticatedStatisticsRoute
   '/tags': typeof AuthenticatedTagsRoute
@@ -123,7 +115,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/_authenticated/quiz': typeof AuthenticatedQuizRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/statistics': typeof AuthenticatedStatisticsRoute
   '/_authenticated/tags': typeof AuthenticatedTagsRoute
@@ -139,7 +130,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/quiz'
     | '/settings'
     | '/statistics'
     | '/tags'
@@ -153,7 +143,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/quiz'
     | '/settings'
     | '/statistics'
     | '/tags'
@@ -168,7 +157,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/_authenticated/quiz'
     | '/_authenticated/settings'
     | '/_authenticated/statistics'
     | '/_authenticated/tags'
@@ -245,13 +233,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/quiz': {
-      id: '/_authenticated/quiz'
-      path: '/quiz'
-      fullPath: '/quiz'
-      preLoaderRoute: typeof AuthenticatedQuizRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/practice/quiz': {
       id: '/_authenticated/practice/quiz'
       path: '/practice/quiz'
@@ -284,7 +265,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedQuizRoute: typeof AuthenticatedQuizRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStatisticsRoute: typeof AuthenticatedStatisticsRoute
   AuthenticatedTagsRoute: typeof AuthenticatedTagsRoute
@@ -296,7 +276,6 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedQuizRoute: AuthenticatedQuizRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStatisticsRoute: AuthenticatedStatisticsRoute,
   AuthenticatedTagsRoute: AuthenticatedTagsRoute,
