@@ -251,17 +251,24 @@ export function PracticePickerDialog({
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">
-              {canStart
-                ? `Ready — up to ${effectiveMax} question${effectiveMax === 1 ? "" : "s"}.`
-                : "Pick at least one word and one question type."}
-            </span>
-            <Button onClick={start} disabled={!canStart}>
-              Start
-            </Button>
-          </div>
         </div>
+
+        <div
+          className={cn(
+            "flex items-center justify-between gap-3 pt-2",
+            isMobile && "mt-auto flex-col items-stretch border-t border-border/60 bg-background pt-3",
+          )}
+        >
+          <span className="text-xs text-muted-foreground">
+            {canStart
+              ? `Ready — up to ${effectiveMax} question${effectiveMax === 1 ? "" : "s"}.`
+              : "Pick at least one word and one question type."}
+          </span>
+          <Button onClick={start} disabled={!canStart} className={cn(isMobile && "w-full")} size={isMobile ? "lg" : "default"}>
+            Start
+          </Button>
+        </div>
+
       </DialogContent>
     </Dialog>
   );
