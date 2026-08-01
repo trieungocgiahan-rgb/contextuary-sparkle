@@ -25,14 +25,22 @@ export function WordDetailsDrawer({
   onUpdate: (patch: Partial<WordRow>) => void;
   onDelete: () => void;
 }) {
+  const isMobile = useIsMobile();
   if (!word) return null;
   const tag = tags.find((t) => t.id === word.tag_id);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={
+          isMobile
+            ? "h-[92dvh] w-full overflow-y-auto rounded-t-3xl px-5 pb-[calc(env(safe-area-inset-bottom)+24px)] pt-6 [&>button]:h-11 [&>button]:w-11 [&>button]:top-3 [&>button]:right-3 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:bg-muted"
+            : "w-full overflow-y-auto sm:max-w-lg"
+        }
+      >
         <SheetHeader>
-          <div className="flex items-baseline gap-3">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 pr-12">
             <SheetTitle className="text-3xl font-bold">{word.word}</SheetTitle>
             {word.ipa && <span className="text-sm text-muted-foreground">{word.ipa}</span>}
           </div>
@@ -40,6 +48,7 @@ export function WordDetailsDrawer({
             {word.vietnamese_meaning}
           </SheetDescription>
         </SheetHeader>
+
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => speak(word.word).catch(() => toast.error("TTS failed"))}>
