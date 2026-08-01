@@ -96,12 +96,19 @@ export function PracticePickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        className={cn(
+          "max-w-2xl",
+          isMobile &&
+            "left-0 top-0 flex h-[100dvh] max-h-[100dvh] max-w-none translate-x-0 translate-y-0 flex-col rounded-none p-5 pb-[calc(env(safe-area-inset-bottom)+16px)]",
+        )}
+      >
         <DialogHeader>
           <DialogTitle>Start practice</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className={cn("space-y-5", isMobile && "flex-1 overflow-y-auto pb-2")}>
+
           {/* MODE */}
           <div>
             <Label>Mode</Label>
