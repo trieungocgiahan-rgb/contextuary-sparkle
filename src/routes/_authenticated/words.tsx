@@ -23,6 +23,9 @@ import { DailyPicksBar } from "@/components/daily-picks-bar";
 import type { SatWord } from "@/lib/daily-picks.functions";
 import { PracticePickerDialog } from "@/components/practice-picker";
 import { validateWord } from "@/lib/validation.functions";
+import { OverviewCard } from "@/components/app-sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { STATUS_META as SM } from "@/lib/vocab";
 
 export const Route = createFileRoute("/_authenticated/words")({
   head: () => ({
