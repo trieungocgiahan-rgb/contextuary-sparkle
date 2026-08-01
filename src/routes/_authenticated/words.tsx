@@ -199,8 +199,8 @@ function WordsPage() {
 
       <div className="mb-4 rounded-2xl bg-card p-4 shadow-sm">
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[220px] flex-1">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative w-full sm:min-w-[220px] sm:flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search words…"
@@ -209,33 +209,107 @@ function WordsPage() {
               className="pl-9"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={tagFilter} onValueChange={setTagFilter}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All tags" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All tags</SelectItem>
-              {tags.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-11 w-full sm:h-9 sm:w-[160px]">
+                <Filter className="mr-2 h-4 w-4 shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={tagFilter} onValueChange={setTagFilter}>
+              <SelectTrigger className="h-11 w-full sm:h-9 sm:w-[160px]">
+                <SelectValue placeholder="All tags" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All tags</SelectItem>
+                {tags.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-2xl bg-card shadow-sm">
+      {/* Mobile: stacked cards */}
+      <div className="space-y-3 md:hidden">
+        {filtered.length === 0 && (
+          <div className="rounded-2xl bg-card py-12 text-center text-sm text-muted-foreground shadow-sm">
+            {words.length === 0 ? "No words yet — add your first one!" : "No matching words."}
+          </div>
+        )}
+        {filtered.map((w) => {
+          const tag = tags.find((t) => t.id === w.tag_id);
+          const meta = STATUS_META[w.status];
+          return (
+            <div
+              key={w.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedId(w.id)}
+              onKeyDown={(e) => e.key === "Enter" && setSelectedId(w.id)}
+              className="rounded-2xl bg-card p-4 shadow-sm transition active:scale-[0.99]"
+            >
+              <div className="flex items-baseline gap-2">
+                {w.is_favorite && <Star className="h-4 w-4 shrink-0 fill-primary text-primary" />}
+                <span className="text-lg font-semibold">{w.word}</span>
+                {w.ipa && <span className="truncate text-sm text-muted-foreground">{w.ipa}</span>}
+              </div>
+              <p className="mt-1 text-base leading-relaxed text-muted-foreground">
+                {w.vietnamese_meaning}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span
+                  className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                  style={{ backgroundColor: meta.bg, color: meta.fg }}
+                >
+                  {meta.label}
+                </span>
+                {tag && (
+                  <Badge
+                    variant="secondary"
+                    style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: `${tag.color}55` }}
+                    className="border"
+                  >
+                    {tag.name}
+                  </Badge>
+                )}
+              </div>
+              <div className="mt-3 flex items-center gap-1 border-t border-border/60 pt-2" onClick={(e) => e.stopPropagation()}>
+                <Button size="icon" variant="ghost" aria-label={`Listen to ${w.word}`} onClick={() => speak(w.word).catch(() => toast.error("TTS failed"))}>
+                  <Volume2 className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label="Toggle favorite"
+                  onClick={() => updateMut.mutate({ id: w.id, patch: { is_favorite: !w.is_favorite } })}
+                >
+                  <Star className={w.is_favorite ? "h-5 w-5 fill-primary text-primary" : "h-5 w-5"} />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label="Delete word"
+                  className="ml-auto"
+                  onClick={() => { if (confirm(`Delete "${w.word}"?`)) deleteMut.mutate(w.id); }}
+                >
+                  <Trash2 className="h-5 w-5 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop / tablet: table */}
+      <div className="hidden rounded-2xl bg-card shadow-sm md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -321,6 +395,7 @@ function WordsPage() {
           </TableBody>
         </Table>
       </div>
+
 
       <WordDetailsDrawer
         word={selected}
