@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { X, Volume2 } from "lucide-react";
+import { motion } from "framer-motion";
+
 
 import { wordsQueryOptions } from "@/lib/queries";
 import { loadSession, clearSession } from "@/lib/practice-session";
