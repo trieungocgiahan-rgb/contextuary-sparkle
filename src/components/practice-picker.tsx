@@ -40,7 +40,9 @@ export function PracticePickerDialog({
   selectedIds?: string[];
 }) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { data: words = [] } = useQuery(wordsQueryOptions());
+
 
   const [mode, setMode] = useState<PracticeMode>("standard");
   const [type, setType] = useState<PracticeType>("quiz");
