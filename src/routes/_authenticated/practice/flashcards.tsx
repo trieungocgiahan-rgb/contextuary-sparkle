@@ -127,25 +127,40 @@ function FlashcardsPage() {
   const progress = ((total - deck.length) / total) * 100;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col p-4 lg:p-6">
+    <div className="mx-auto flex min-h-[100dvh] max-w-2xl flex-col px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+16px)] lg:p-6">
       <div className="mb-3 flex items-center justify-between gap-4">
-        <Button size="icon" variant="ghost" onClick={() => {
+        <Button size="icon" variant="ghost" aria-label="Exit session" onClick={() => {
           if (confirm("Exit this session?")) { clearSession(); navigate({ to: "/words" }); }
         }}>
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </Button>
         <div className="text-sm text-muted-foreground">
           {total - deck.length} / {total}
         </div>
         <div className="w-8" />
       </div>
-      <Progress value={progress} className="mb-6" />
+      <Progress value={progress} className="mb-5" />
 
-      <button
+      <motion.button
+        key={card.id + String(flipped)}
         type="button"
         onClick={flip}
+        drag
+        dragSnapToOrigin
+        dragElastic={0.5}
+        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        onDragEnd={(_, info) => {
+          const { x, y } = info.offset;
+          if (Math.abs(x) > Math.abs(y)) {
+            if (x < -90) markUnknown();
+            else if (x > 90) markKnown();
+          } else if (y < -80) {
+            flip();
+          }
+        }}
+        whileTap={{ scale: 0.99 }}
         className={cn(
-          "relative flex min-h-[380px] w-full items-center justify-center rounded-3xl border bg-card p-8 shadow-sm transition",
+          "relative flex min-h-[58dvh] w-full touch-none select-none items-center justify-center rounded-3xl border bg-card p-6 shadow-sm transition sm:min-h-[380px] sm:p-8",
           "hover:shadow-md",
         )}
       >
@@ -158,11 +173,14 @@ function FlashcardsPage() {
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); speakText(card.word); }}
               onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); speakText(card.word); } }}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs hover:bg-muted"
+              className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-4 py-2 text-sm hover:bg-muted"
             >
-              <Volume2 className="h-3.5 w-3.5" /> Listen
+              <Volume2 className="h-4 w-4" /> Listen
             </div>
-            <div className="mt-6 text-xs uppercase tracking-wider text-muted-foreground">Tap to flip · Space</div>
+            <div className="mt-6 text-xs uppercase tracking-wider text-muted-foreground">
+              <span className="sm:hidden">Swipe up to flip · left / right to answer</span>
+              <span className="hidden sm:inline">Tap to flip · Space</span>
+            </div>
           </div>
         ) : (
           <div className="w-full text-center">
@@ -177,25 +195,26 @@ function FlashcardsPage() {
             )}
           </div>
         )}
-      </button>
+      </motion.button>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-5 grid grid-cols-2 gap-3">
         <Button
           variant="outline"
           size="lg"
-          className="border-rose-200 text-rose-700 hover:bg-rose-50"
+          className="h-14 border-rose-200 text-rose-700 hover:bg-rose-50 sm:h-10"
           onClick={markUnknown}
         >
-          Chưa nhớ <span className="ml-2 text-xs opacity-60">1 · ←</span>
+          Chưa nhớ <span className="ml-2 hidden text-xs opacity-60 sm:inline">1 · ←</span>
         </Button>
         <Button
           size="lg"
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="h-14 bg-emerald-600 hover:bg-emerald-700 sm:h-10"
           onClick={markKnown}
         >
-          Đã nhớ <span className="ml-2 text-xs opacity-80">2 · →</span>
+          Đã nhớ <span className="ml-2 hidden text-xs opacity-80 sm:inline">2 · →</span>
         </Button>
       </div>
     </div>
   );
 }
+
