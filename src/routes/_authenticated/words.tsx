@@ -132,29 +132,35 @@ function WordsPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
+    <div className="px-4 py-5 sm:p-6 lg:p-8">
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight">My Words</h1>
           <p className="text-sm text-muted-foreground">
             {words.length} words · Understand them in context.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => setPracticeOpen(true)}>
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={() => setPracticeOpen(true)}>
             <Sparkles className="mr-2 h-4 w-4" /> Practice
           </Button>
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" /> Add Word
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent
+              className={
+                isMobile
+                  ? "flex h-[100dvh] max-h-[100dvh] max-w-none translate-x-0 translate-y-0 left-0 top-0 grid-rows-[auto_1fr_auto] rounded-none p-5 pb-[calc(env(safe-area-inset-bottom)+20px)]"
+                  : undefined
+              }
+            >
               <DialogHeader>
                 <DialogTitle>Add a new word</DialogTitle>
               </DialogHeader>
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto">
                 <Input
                   placeholder="e.g. ubiquitous"
                   value={newWord}
@@ -163,22 +169,22 @@ function WordsPage() {
                   autoFocus
                 />
                 {validationError && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                     {validationError}
                     {suggestion && (
-                      <Button size="sm" variant="outline" className="ml-2" onClick={() => { setNewWord(suggestion); handleAdd(suggestion); }}>
+                      <Button size="sm" variant="outline" className="mt-2 w-full sm:ml-2 sm:mt-0 sm:w-auto" onClick={() => { setNewWord(suggestion); handleAdd(suggestion); }}>
                         Use "{suggestion}"
                       </Button>
                     )}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground sm:text-xs">
                   Contextuary will validate and generate IPA, meaning, examples and more.
                 </p>
               </div>
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</Button>
-                <Button onClick={() => handleAdd()} disabled={busy || !newWord.trim()}>
+              <DialogFooter className="mt-auto gap-2 sm:mt-0">
+                <Button variant="ghost" className="w-full sm:w-auto" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</Button>
+                <Button className="w-full sm:w-auto" onClick={() => handleAdd()} disabled={busy || !newWord.trim()}>
                   {busy ? "Working…" : "Validate & Add"}
                 </Button>
               </DialogFooter>
@@ -187,9 +193,12 @@ function WordsPage() {
         </div>
       </header>
 
+      <OverviewCard className="mb-4 lg:hidden" />
+
       <DailyPicksBar onPreview={setPreviewSat} />
 
       <div className="mb-4 rounded-2xl bg-card p-4 shadow-sm">
+
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[220px] flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
