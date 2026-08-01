@@ -425,13 +425,22 @@ function SatPreviewSheet({
   word: SatWord | null;
   onOpenChange: (o: boolean) => void;
 }) {
+  const isMobile = useIsMobile();
   if (!word) return null;
   return (
     <Sheet open={!!word} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={
+          isMobile
+            ? "h-[92dvh] w-full overflow-y-auto rounded-t-3xl px-5 pb-[calc(env(safe-area-inset-bottom)+24px)] pt-6 [&>button]:h-11 [&>button]:w-11 [&>button]:top-3 [&>button]:right-3 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:bg-muted"
+            : "w-full overflow-y-auto sm:max-w-lg"
+        }
+      >
         <SheetHeader>
-          <div className="flex items-baseline gap-3">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 pr-12">
             <SheetTitle className="text-3xl font-bold">{word.word}</SheetTitle>
+
             {word.pronunciation && (
               <span className="text-sm text-muted-foreground">{word.pronunciation}</span>
             )}
