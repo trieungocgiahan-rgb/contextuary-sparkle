@@ -102,8 +102,8 @@ export function DailyPicksBar({
   return (
     <div className="mb-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
+        <div className="flex min-w-0 items-center gap-2">
+          <Sparkles className="h-4 w-4 shrink-0 text-primary" />
           <h2 className="text-sm font-semibold">Daily Picks</h2>
           <span className="text-xs text-muted-foreground">
             {added} / {goal} added today
@@ -111,7 +111,7 @@ export function DailyPicksBar({
         </div>
         <Link
           to="/settings"
-          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition hover:bg-muted hover:text-foreground"
         >
           <Settings className="h-3.5 w-3.5" />
           Daily goal: {goal}
@@ -127,21 +127,21 @@ export function DailyPicksBar({
           <button
             aria-label="Scroll left"
             onClick={() => scrollBy(-1)}
-            className="absolute left-1 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white/95 shadow-sm transition hover:bg-white"
+            className="absolute left-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white/95 shadow-sm transition hover:bg-white sm:flex"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             aria-label="Scroll right"
             onClick={() => scrollBy(1)}
-            className="absolute right-1 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white/95 shadow-sm transition hover:bg-white"
+            className="absolute right-1 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white/95 shadow-sm transition hover:bg-white sm:flex"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
 
           <div
             ref={scrollerRef}
-            className="flex gap-2.5 overflow-x-auto px-9 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory gap-3 overflow-x-auto py-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] sm:snap-none sm:gap-2.5 sm:px-9 [&::-webkit-scrollbar]:hidden"
           >
             <AnimatePresence initial={false} mode="popLayout">
               {items.map((w) => (
@@ -165,6 +165,7 @@ export function DailyPicksBar({
     </div>
   );
 }
+
 
 function Chip({
   word,

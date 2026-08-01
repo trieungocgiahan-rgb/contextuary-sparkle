@@ -1,6 +1,6 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar, MobileTabBar, MobileTopBar } from "@/components/app-sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -13,12 +13,17 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const immersive = pathname.startsWith("/practice");
+
   return (
     <div className="min-h-screen bg-background">
       <AppSidebar />
-      <main className="lg:pl-64">
+      {!immersive && <MobileTopBar />}
+      <main className={immersive ? "lg:pl-64" : "pb-24 lg:pb-0 lg:pl-64"}>
         <Outlet />
       </main>
+      {!immersive && <MobileTabBar />}
     </div>
   );
 }
