@@ -18,6 +18,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 
 const ALL_QUIZ_TYPES: QuizType[] = [
   "word_meaning",
@@ -40,7 +42,9 @@ export function PracticePickerDialog({
   selectedIds?: string[];
 }) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { data: words = [] } = useQuery(wordsQueryOptions());
+
 
   const [mode, setMode] = useState<PracticeMode>("standard");
   const [type, setType] = useState<PracticeType>("quiz");
@@ -96,12 +100,19 @@ export function PracticePickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        className={cn(
+          "max-w-2xl",
+          isMobile &&
+            "left-0 top-0 flex h-[100dvh] max-h-[100dvh] max-w-none translate-x-0 translate-y-0 flex-col rounded-none p-5 pb-[calc(env(safe-area-inset-bottom)+16px)]",
+        )}
+      >
         <DialogHeader>
           <DialogTitle>Start practice</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className={cn("space-y-5", isMobile && "flex-1 overflow-y-auto pb-2")}>
+
           {/* MODE */}
           <div>
             <Label>Mode</Label>
@@ -240,17 +251,24 @@ export function PracticePickerDialog({
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">
-              {canStart
-                ? `Ready — up to ${effectiveMax} question${effectiveMax === 1 ? "" : "s"}.`
-                : "Pick at least one word and one question type."}
-            </span>
-            <Button onClick={start} disabled={!canStart}>
-              Start
-            </Button>
-          </div>
         </div>
+
+        <div
+          className={cn(
+            "flex items-center justify-between gap-3 pt-2",
+            isMobile && "mt-auto flex-col items-stretch border-t border-border/60 bg-background pt-3",
+          )}
+        >
+          <span className="text-xs text-muted-foreground">
+            {canStart
+              ? `Ready — up to ${effectiveMax} question${effectiveMax === 1 ? "" : "s"}.`
+              : "Pick at least one word and one question type."}
+          </span>
+          <Button onClick={start} disabled={!canStart} className={cn(isMobile && "w-full")} size={isMobile ? "lg" : "default"}>
+            Start
+          </Button>
+        </div>
+
       </DialogContent>
     </Dialog>
   );

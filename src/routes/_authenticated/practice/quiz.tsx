@@ -163,19 +163,19 @@ function QuizPage() {
     : `${q.word} — ${q.vietnamese_meaning ?? ""}`);
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col p-4 lg:p-6">
+    <div className="mx-auto flex min-h-[100dvh] max-w-2xl flex-col px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+96px)] sm:pb-6 lg:p-6">
       {/* Top bar */}
-      <div className="mb-3 flex items-center justify-between gap-4">
-        <Button size="icon" variant="ghost" onClick={() => {
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <Button size="icon" variant="ghost" aria-label="Exit session" onClick={() => {
           if (confirm("Exit this session? Progress will be lost.")) {
             clearSession();
             navigate({ to: "/words" });
           }
         }}>
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </Button>
         <div className="text-sm text-muted-foreground">
-          Question {idx + 1} of {questions.length}
+          {idx + 1} / {questions.length}
         </div>
         {profile?.show_timer !== false && (
           <div className="flex items-center gap-1 text-sm tabular-nums text-muted-foreground">
@@ -184,22 +184,22 @@ function QuizPage() {
         )}
         {profile?.show_timer === false && <div className="w-8" />}
       </div>
-      <Progress value={progress} className="mb-6" />
+      <Progress value={progress} className="mb-5" />
 
-      <div className="rounded-2xl bg-card p-6 shadow-sm">
+      <div className="rounded-2xl bg-card p-4 shadow-sm sm:p-6">
         <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {QUIZ_TYPE_LABELS[q.type]}
         </div>
-        <div className="mb-6 flex items-start gap-3">
-          <h2 className="text-2xl font-bold leading-relaxed">{q.prompt}</h2>
+        <div className="mb-5 flex items-start gap-3">
+          <h2 className="text-xl font-bold leading-relaxed sm:text-2xl">{q.prompt}</h2>
           {q.type === "listen" && (
-            <Button size="icon" variant="outline" onClick={() => speakText(q.play_audio!)}>
-              <Volume2 className="h-4 w-4" />
+            <Button size="icon" variant="outline" className="shrink-0" aria-label="Play audio" onClick={() => speakText(q.play_audio!)}>
+              <Volume2 className="h-5 w-5" />
             </Button>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {q.options.map((opt, i) => {
             const isCorrect = i === q.answer_index;
             const isPicked = a.picked === i;
@@ -209,7 +209,7 @@ function QuizPage() {
                 onClick={() => pick(i)}
                 disabled={showFeedback}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-lg border p-3 text-left text-sm transition",
+                  "flex min-h-[56px] w-full items-center justify-between gap-3 rounded-xl border p-4 text-left text-base transition active:scale-[0.99] sm:min-h-0 sm:p-3 sm:text-sm",
                   !showFeedback && "hover:border-primary hover:bg-primary/5",
                   showFeedback && isCorrect && "border-emerald-500 bg-emerald-50",
                   showFeedback && isPicked && !isCorrect && "border-rose-500 bg-rose-50",
@@ -217,8 +217,8 @@ function QuizPage() {
                 )}
               >
                 <span>{opt}</span>
-                {showFeedback && isCorrect && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                {showFeedback && isPicked && !isCorrect && <XCircle className="h-4 w-4 text-rose-600" />}
+                {showFeedback && isCorrect && <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />}
+                {showFeedback && isPicked && !isCorrect && <XCircle className="h-5 w-5 shrink-0 text-rose-600" />}
               </button>
             );
           })}
@@ -249,17 +249,18 @@ function QuizPage() {
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 border-t border-border/60 bg-background/95 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] backdrop-blur sm:static sm:mt-4 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
         <Button variant="ghost" onClick={() => setIdx(Math.max(0, idx - 1))} disabled={idx === 0}>
           <ChevronLeft className="mr-1 h-4 w-4" /> Previous
         </Button>
-        <Button onClick={next} disabled={!showFeedback}>
+        <Button onClick={next} disabled={!showFeedback} className="min-w-[140px] flex-1 sm:flex-none">
           {idx + 1 >= questions.length ? "Finish" : "Next"} <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
     </div>
   );
 }
+
 
 function EndScreen({ answers, elapsedMs, changes }: { answers: Answer[]; elapsedMs: number; changes: StatusChange[] }) {
   const navigate = useNavigate();

@@ -23,6 +23,9 @@ import { DailyPicksBar } from "@/components/daily-picks-bar";
 import type { SatWord } from "@/lib/daily-picks.functions";
 import { PracticePickerDialog } from "@/components/practice-picker";
 import { validateWord } from "@/lib/validation.functions";
+import { OverviewCard } from "@/components/app-sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 
 export const Route = createFileRoute("/_authenticated/words")({
   head: () => ({
@@ -52,6 +55,7 @@ function WordsPage() {
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [practiceOpen, setPracticeOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const create = useServerFn(createWord);
   const del = useServerFn(deleteWord);
@@ -128,29 +132,35 @@ function WordsPage() {
   }
 
   return (
-    <div className="p-6 lg:p-8">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
+    <div className="px-4 py-5 sm:p-6 lg:p-8">
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight">My Words</h1>
           <p className="text-sm text-muted-foreground">
             {words.length} words · Understand them in context.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => setPracticeOpen(true)}>
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={() => setPracticeOpen(true)}>
             <Sparkles className="mr-2 h-4 w-4" /> Practice
           </Button>
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" /> Add Word
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent
+              className={
+                isMobile
+                  ? "flex h-[100dvh] max-h-[100dvh] max-w-none translate-x-0 translate-y-0 left-0 top-0 grid-rows-[auto_1fr_auto] rounded-none p-5 pb-[calc(env(safe-area-inset-bottom)+20px)]"
+                  : undefined
+              }
+            >
               <DialogHeader>
                 <DialogTitle>Add a new word</DialogTitle>
               </DialogHeader>
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto">
                 <Input
                   placeholder="e.g. ubiquitous"
                   value={newWord}
@@ -159,22 +169,22 @@ function WordsPage() {
                   autoFocus
                 />
                 {validationError && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                     {validationError}
                     {suggestion && (
-                      <Button size="sm" variant="outline" className="ml-2" onClick={() => { setNewWord(suggestion); handleAdd(suggestion); }}>
+                      <Button size="sm" variant="outline" className="mt-2 w-full sm:ml-2 sm:mt-0 sm:w-auto" onClick={() => { setNewWord(suggestion); handleAdd(suggestion); }}>
                         Use "{suggestion}"
                       </Button>
                     )}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground sm:text-xs">
                   Contextuary will validate and generate IPA, meaning, examples and more.
                 </p>
               </div>
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</Button>
-                <Button onClick={() => handleAdd()} disabled={busy || !newWord.trim()}>
+              <DialogFooter className="mt-auto gap-2 sm:mt-0">
+                <Button variant="ghost" className="w-full sm:w-auto" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</Button>
+                <Button className="w-full sm:w-auto" onClick={() => handleAdd()} disabled={busy || !newWord.trim()}>
                   {busy ? "Working…" : "Validate & Add"}
                 </Button>
               </DialogFooter>
@@ -183,11 +193,14 @@ function WordsPage() {
         </div>
       </header>
 
+      <OverviewCard className="mb-4 lg:hidden" />
+
       <DailyPicksBar onPreview={setPreviewSat} />
 
       <div className="mb-4 rounded-2xl bg-card p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[220px] flex-1">
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative w-full sm:min-w-[220px] sm:flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search words…"
@@ -196,33 +209,107 @@ function WordsPage() {
               className="pl-9"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={tagFilter} onValueChange={setTagFilter}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All tags" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All tags</SelectItem>
-              {tags.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-11 w-full sm:h-9 sm:w-[160px]">
+                <Filter className="mr-2 h-4 w-4 shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={tagFilter} onValueChange={setTagFilter}>
+              <SelectTrigger className="h-11 w-full sm:h-9 sm:w-[160px]">
+                <SelectValue placeholder="All tags" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All tags</SelectItem>
+                {tags.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-2xl bg-card shadow-sm">
+      {/* Mobile: stacked cards */}
+      <div className="space-y-3 md:hidden">
+        {filtered.length === 0 && (
+          <div className="rounded-2xl bg-card py-12 text-center text-sm text-muted-foreground shadow-sm">
+            {words.length === 0 ? "No words yet — add your first one!" : "No matching words."}
+          </div>
+        )}
+        {filtered.map((w) => {
+          const tag = tags.find((t) => t.id === w.tag_id);
+          const meta = STATUS_META[w.status];
+          return (
+            <div
+              key={w.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedId(w.id)}
+              onKeyDown={(e) => e.key === "Enter" && setSelectedId(w.id)}
+              className="rounded-2xl bg-card p-4 shadow-sm transition active:scale-[0.99]"
+            >
+              <div className="flex items-baseline gap-2">
+                {w.is_favorite && <Star className="h-4 w-4 shrink-0 fill-primary text-primary" />}
+                <span className="text-lg font-semibold">{w.word}</span>
+                {w.ipa && <span className="truncate text-sm text-muted-foreground">{w.ipa}</span>}
+              </div>
+              <p className="mt-1 text-base leading-relaxed text-muted-foreground">
+                {w.vietnamese_meaning}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span
+                  className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                  style={{ backgroundColor: meta.bg, color: meta.fg }}
+                >
+                  {meta.label}
+                </span>
+                {tag && (
+                  <Badge
+                    variant="secondary"
+                    style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: `${tag.color}55` }}
+                    className="border"
+                  >
+                    {tag.name}
+                  </Badge>
+                )}
+              </div>
+              <div className="mt-3 flex items-center gap-1 border-t border-border/60 pt-2" onClick={(e) => e.stopPropagation()}>
+                <Button size="icon" variant="ghost" aria-label={`Listen to ${w.word}`} onClick={() => speak(w.word).catch(() => toast.error("TTS failed"))}>
+                  <Volume2 className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label="Toggle favorite"
+                  onClick={() => updateMut.mutate({ id: w.id, patch: { is_favorite: !w.is_favorite } })}
+                >
+                  <Star className={w.is_favorite ? "h-5 w-5 fill-primary text-primary" : "h-5 w-5"} />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label="Delete word"
+                  className="ml-auto"
+                  onClick={() => { if (confirm(`Delete "${w.word}"?`)) deleteMut.mutate(w.id); }}
+                >
+                  <Trash2 className="h-5 w-5 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop / tablet: table */}
+      <div className="hidden rounded-2xl bg-card shadow-sm md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -309,6 +396,7 @@ function WordsPage() {
         </Table>
       </div>
 
+
       <WordDetailsDrawer
         word={selected}
         tags={tags}
@@ -337,13 +425,22 @@ function SatPreviewSheet({
   word: SatWord | null;
   onOpenChange: (o: boolean) => void;
 }) {
+  const isMobile = useIsMobile();
   if (!word) return null;
   return (
     <Sheet open={!!word} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        className={
+          isMobile
+            ? "h-[92dvh] w-full overflow-y-auto rounded-t-3xl px-5 pb-[calc(env(safe-area-inset-bottom)+24px)] pt-6 [&>button]:h-11 [&>button]:w-11 [&>button]:top-3 [&>button]:right-3 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:bg-muted"
+            : "w-full overflow-y-auto sm:max-w-lg"
+        }
+      >
         <SheetHeader>
-          <div className="flex items-baseline gap-3">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 pr-12">
             <SheetTitle className="text-3xl font-bold">{word.word}</SheetTitle>
+
             {word.pronunciation && (
               <span className="text-sm text-muted-foreground">{word.pronunciation}</span>
             )}
