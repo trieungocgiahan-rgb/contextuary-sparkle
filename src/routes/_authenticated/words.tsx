@@ -55,6 +55,7 @@ function WordsPage() {
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [practiceOpen, setPracticeOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const create = useServerFn(createWord);
   const del = useServerFn(deleteWord);
