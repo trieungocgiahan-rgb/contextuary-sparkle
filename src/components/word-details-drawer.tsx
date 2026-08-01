@@ -7,6 +7,7 @@ import { STATUS_OPTIONS, STATUS_META } from "@/lib/vocab";
 import type { WordRow } from "@/lib/vocab.functions";
 import { toast } from "sonner";
 import { speak } from "@/lib/tts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Tag = { id: string; name: string; color: string };
 
@@ -74,7 +75,7 @@ export function WordDetailsDrawer({
           </Button>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
             <Select value={word.status} onValueChange={(v) => onUpdate({ status: v as WordRow["status"] })}>
