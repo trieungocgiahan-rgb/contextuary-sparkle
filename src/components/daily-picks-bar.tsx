@@ -236,7 +236,7 @@ function Chip({
       <button
         type="button"
         onClick={onPreview}
-        className={`group relative flex h-[120px] w-full flex-col justify-between overflow-hidden rounded-xl p-4 text-left text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md sm:h-[104px] sm:p-3 ${
+        className={`group relative flex h-[72px] w-full flex-col justify-center overflow-hidden rounded-xl p-3 text-left text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md sm:h-[64px] ${
           flashing ? "ring-2 ring-emerald-300" : ""
         }`}
         style={{
@@ -246,19 +246,12 @@ function Chip({
         }}
       >
         <div className="min-w-0 pr-12">
-          <div className="truncate text-lg font-semibold leading-tight sm:text-base">{word.word}</div>
+          <div className="truncate text-base font-semibold leading-tight">{word.word}</div>
           {word.pronunciation && (
-            <div className="truncate text-xs font-normal text-white/80 sm:text-[11px]">
+            <div className="truncate text-[11px] font-normal text-white/80">
               {word.pronunciation}
             </div>
           )}
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-[11px] font-medium uppercase tracking-wide text-white/80 sm:text-[10px]">
-            {word.frequency_rank === 1
-              ? "#1 Most common"
-              : `#${word.frequency_rank}`}
-          </span>
         </div>
       </button>
       <button
@@ -269,9 +262,9 @@ function Chip({
           setFlashing(true);
           setTimeout(onAdd, 180);
         }}
-        className="absolute bottom-2 right-2 flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary shadow transition hover:scale-110 sm:h-7 sm:w-7"
+        className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-primary shadow transition hover:scale-110 sm:h-7 sm:w-7"
       >
-        {flashing ? <Check className="h-5 w-5 sm:h-3.5 sm:w-3.5" /> : <Plus className="h-5 w-5 sm:h-3.5 sm:w-3.5" />}
+        {flashing ? <Check className="h-4 w-4 sm:h-3.5 sm:w-3.5" /> : <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />}
       </button>
     </motion.div>
   );
@@ -279,7 +272,8 @@ function Chip({
 
 function ShimmerChip() {
   return (
-    <div className="h-[120px] w-[78vw] max-w-[300px] shrink-0 animate-pulse rounded-xl bg-muted sm:h-[104px] sm:w-[188px]" />
+    <div className="h-[72px] w-[78vw] max-w-[300px] shrink-0 animate-pulse rounded-xl bg-muted sm:h-[64px] sm:w-[188px]" />
   );
+
 }
 
