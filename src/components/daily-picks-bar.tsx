@@ -136,15 +136,24 @@ export function DailyPicksBar({
   const showEmpty = !picksQ.isLoading && items.length === 0 && !hasMore;
 
   return (
-    <div className="mb-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
+    <div className={`mb-4 rounded-2xl border border-border/70 bg-white shadow-sm ${collapsed ? "p-2.5" : "p-4"}`}>
+      <div className={`flex flex-wrap items-center justify-between gap-2 ${collapsed ? "" : "mb-3"}`}>
+        <button
+          type="button"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? "Expand Daily Picks" : "Collapse Daily Picks"}
+          className="flex min-w-0 items-center gap-2 rounded-md px-1 py-1 text-left transition hover:bg-muted/60"
+        >
           <Sparkles className="h-4 w-4 shrink-0 text-primary" />
           <h2 className="text-sm font-semibold">Daily Picks</h2>
-          <span className="text-xs text-muted-foreground">
-            {added} / {goal} added today
+          <span className="truncate text-xs text-muted-foreground">
+            · {added} / {goal} added today
           </span>
-        </div>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${collapsed ? "-rotate-90" : ""}`}
+          />
+        </button>
         <Link
           to="/settings"
           className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition hover:bg-muted hover:text-foreground"
@@ -154,11 +163,12 @@ export function DailyPicksBar({
         </Link>
       </div>
 
-      {showEmpty ? (
+      {collapsed ? null : showEmpty ? (
         <div className="py-3 text-center text-sm text-muted-foreground">
           You've added every word 🎉
         </div>
       ) : (
+
         <div className="relative">
           <button
             aria-label="Scroll left"
