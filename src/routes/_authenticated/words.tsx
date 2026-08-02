@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Plus, Search, Sparkles, Star, Trash2, Volume2, Filter } from "lucide-react";
+import { Plus, Search, Sparkles, Star, Trash2, Volume2, Filter, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { wordsQueryOptions, tagsQueryOptions } from "@/lib/queries";
