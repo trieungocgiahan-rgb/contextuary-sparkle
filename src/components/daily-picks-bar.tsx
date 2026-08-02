@@ -41,18 +41,50 @@ export function DailyPicksBar({
 
   const picksQ = useInfiniteQuery(dailyPicksInfiniteQueryOptions());
   const progressQ = useQuery(dailyProgressQueryOptions(date));
+  const tagsQ = useQuery(tagsQueryOptions());
   const add = useServerFn(addDailyPick);
+  const generate = useServerFn(generateWordDetails);
+  const [collapsed, setCollapsed] = usePersistentToggle("contextuary:daily-picks-collapsed", false);
 
+  const allItems = useMemo(
+    () => picksQ.data?.pages.flatMap((p) => p.items) ?? [],
+    [picksQ.data],
+  );
   const items = useMemo(
-    () => (picksQ.data?.pages.flatMap((p) => p.items) ?? []).filter((it) => !addingIds.has(it.id)),
-    [picksQ.data, addingIds],
+    () => allItems.filter((it) => !addingIds.has(it.id)),
+    [allItems, addingIds],
   );
   const hasMore = picksQ.hasNextPage;
   const goal = progressQ.data?.daily_goal ?? 10;
   const added = progressQ.data?.words_added ?? 0;
 
   const addMut = useMutation({
-    mutationFn: (id: string) => add({ data: { satWordId: id, date } }),
+    mutationFn: async (id: string) => {
+      const sat = allItems.find((w) => w.id === id);
+      let details: Parameters<typeof add>[0]["data"]["details"] = undefined;
+      if (sat) {
+        try {
+          const d = await generate({ data: { word: sat.word } });
+          const tag = (tagsQ.data ?? []).find(
+            (t) => t.name.toLowerCase() === d.suggested_tag.toLowerCase(),
+          );
+          details = {
+            ipa: d.ipa,
+            vietnamese_meaning: d.vietnamese_meaning,
+            nuance_note: d.nuance_note,
+            examples: d.examples,
+            collocations: d.collocations,
+            synonyms: d.synonyms,
+            antonyms: d.antonyms,
+            memory_hint: d.memory_hint,
+            tag_id: tag?.id ?? null,
+          };
+        } catch {
+          // fall back to the stored word-bank content
+        }
+      }
+      return add({ data: { satWordId: id, date, details } });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["words"] });
       qc.invalidateQueries({ queryKey: ["stats"] });
@@ -72,6 +104,7 @@ export function DailyPicksBar({
     setAddingIds((prev) => new Set(prev).add(id));
     addMut.mutate(id);
   }
+
 
   // Scroll container ref for arrow buttons + infinite scroll sentinel
   const scrollerRef = useRef<HTMLDivElement | null>(null);
