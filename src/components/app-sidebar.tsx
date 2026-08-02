@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, GraduationCap, BarChart3, Tags, Settings, Sparkles, Quote, ChevronDown } from "lucide-react";
+import { BookOpen, GraduationCap, BarChart3, Tags, Settings, Sparkles, Quote, ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { statsQueryOptions } from "@/lib/queries";
@@ -7,10 +7,13 @@ import { QUOTES } from "@/lib/vocab";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { usePersistentToggle } from "@/hooks/use-persistent-toggle";
+
+export const SIDEBAR_COLLAPSE_KEY = "contextuary:sidebar-collapsed";
 
 const NAV = [
   { to: "/words", label: "My Words", icon: BookOpen },
-  { to: "/practice/quiz", label: "Practice", icon: GraduationCap },
+  { to: "/practice", label: "Practice", icon: GraduationCap },
   { to: "/statistics", label: "Statistics", icon: BarChart3 },
   { to: "/tags", label: "Tags", icon: Tags },
   { to: "/settings", label: "Settings", icon: Settings },
@@ -18,7 +21,7 @@ const NAV = [
 
 const MOBILE_NAV = [
   { to: "/words", label: "Words", icon: BookOpen },
-  { to: "/practice/quiz", label: "Practice", icon: GraduationCap },
+  { to: "/practice", label: "Practice", icon: GraduationCap },
   { to: "/statistics", label: "Stats", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
