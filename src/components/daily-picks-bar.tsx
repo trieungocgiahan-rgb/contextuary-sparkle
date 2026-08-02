@@ -3,20 +3,23 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Plus, Settings, Sparkles, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, Settings, Sparkles, Check } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   dailyPicksInfiniteQueryOptions,
   dailyProgressQueryOptions,
+  tagsQueryOptions,
 } from "@/lib/queries";
 import { addDailyPick, type SatWord } from "@/lib/daily-picks.functions";
-import { Button } from "@/components/ui/button";
+import { generateWordDetails } from "@/lib/ai.functions";
+import { usePersistentToggle } from "@/hooks/use-persistent-toggle";
 
 function localDateISO() {
   // en-CA locale gives YYYY-MM-DD in the local timezone
   return new Date().toLocaleDateString("en-CA");
 }
+
 
 export function DailyPicksBar({
   onPreview,
