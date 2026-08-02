@@ -3,20 +3,23 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Plus, Settings, Sparkles, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, Settings, Sparkles, Check } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   dailyPicksInfiniteQueryOptions,
   dailyProgressQueryOptions,
+  tagsQueryOptions,
 } from "@/lib/queries";
 import { addDailyPick, type SatWord } from "@/lib/daily-picks.functions";
-import { Button } from "@/components/ui/button";
+import { generateWordDetails } from "@/lib/ai.functions";
+import { usePersistentToggle } from "@/hooks/use-persistent-toggle";
 
 function localDateISO() {
   // en-CA locale gives YYYY-MM-DD in the local timezone
   return new Date().toLocaleDateString("en-CA");
 }
+
 
 export function DailyPicksBar({
   onPreview,
@@ -38,18 +41,50 @@ export function DailyPicksBar({
 
   const picksQ = useInfiniteQuery(dailyPicksInfiniteQueryOptions());
   const progressQ = useQuery(dailyProgressQueryOptions(date));
+  const tagsQ = useQuery(tagsQueryOptions());
   const add = useServerFn(addDailyPick);
+  const generate = useServerFn(generateWordDetails);
+  const [collapsed, setCollapsed] = usePersistentToggle("contextuary:daily-picks-collapsed", false);
 
+  const allItems = useMemo(
+    () => picksQ.data?.pages.flatMap((p) => p.items) ?? [],
+    [picksQ.data],
+  );
   const items = useMemo(
-    () => (picksQ.data?.pages.flatMap((p) => p.items) ?? []).filter((it) => !addingIds.has(it.id)),
-    [picksQ.data, addingIds],
+    () => allItems.filter((it) => !addingIds.has(it.id)),
+    [allItems, addingIds],
   );
   const hasMore = picksQ.hasNextPage;
   const goal = progressQ.data?.daily_goal ?? 10;
   const added = progressQ.data?.words_added ?? 0;
 
   const addMut = useMutation({
-    mutationFn: (id: string) => add({ data: { satWordId: id, date } }),
+    mutationFn: async (id: string) => {
+      const sat = allItems.find((w) => w.id === id);
+      let details: Parameters<typeof add>[0]["data"]["details"] = undefined;
+      if (sat) {
+        try {
+          const d = await generate({ data: { word: sat.word } });
+          const tag = (tagsQ.data ?? []).find(
+            (t) => t.name.toLowerCase() === d.suggested_tag.toLowerCase(),
+          );
+          details = {
+            ipa: d.ipa,
+            vietnamese_meaning: d.vietnamese_meaning,
+            nuance_note: d.nuance_note,
+            examples: d.examples,
+            collocations: d.collocations,
+            synonyms: d.synonyms,
+            antonyms: d.antonyms,
+            memory_hint: d.memory_hint,
+            tag_id: tag?.id ?? null,
+          };
+        } catch {
+          // fall back to the stored word-bank content
+        }
+      }
+      return add({ data: { satWordId: id, date, details } });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["words"] });
       qc.invalidateQueries({ queryKey: ["stats"] });
@@ -69,6 +104,7 @@ export function DailyPicksBar({
     setAddingIds((prev) => new Set(prev).add(id));
     addMut.mutate(id);
   }
+
 
   // Scroll container ref for arrow buttons + infinite scroll sentinel
   const scrollerRef = useRef<HTMLDivElement | null>(null);
@@ -100,15 +136,24 @@ export function DailyPicksBar({
   const showEmpty = !picksQ.isLoading && items.length === 0 && !hasMore;
 
   return (
-    <div className="mb-4 rounded-2xl border border-border/70 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
+    <div className={`mb-4 rounded-2xl border border-border/70 bg-white shadow-sm ${collapsed ? "p-2.5" : "p-4"}`}>
+      <div className={`flex flex-wrap items-center justify-between gap-2 ${collapsed ? "" : "mb-3"}`}>
+        <button
+          type="button"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? "Expand Daily Picks" : "Collapse Daily Picks"}
+          className="flex min-w-0 items-center gap-2 rounded-md px-1 py-1 text-left transition hover:bg-muted/60"
+        >
           <Sparkles className="h-4 w-4 shrink-0 text-primary" />
           <h2 className="text-sm font-semibold">Daily Picks</h2>
-          <span className="text-xs text-muted-foreground">
-            {added} / {goal} added today
+          <span className="truncate text-xs text-muted-foreground">
+            · {added} / {goal} added today
           </span>
-        </div>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${collapsed ? "-rotate-90" : ""}`}
+          />
+        </button>
         <Link
           to="/settings"
           className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition hover:bg-muted hover:text-foreground"
@@ -118,11 +163,12 @@ export function DailyPicksBar({
         </Link>
       </div>
 
-      {showEmpty ? (
+      {collapsed ? null : showEmpty ? (
         <div className="py-3 text-center text-sm text-muted-foreground">
           You've added every word 🎉
         </div>
       ) : (
+
         <div className="relative">
           <button
             aria-label="Scroll left"
@@ -190,7 +236,7 @@ function Chip({
       <button
         type="button"
         onClick={onPreview}
-        className={`group relative flex h-[120px] w-full flex-col justify-between overflow-hidden rounded-xl p-4 text-left text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md sm:h-[104px] sm:p-3 ${
+        className={`group relative flex h-[72px] w-full flex-col justify-center overflow-hidden rounded-xl p-3 text-left text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md sm:h-[64px] ${
           flashing ? "ring-2 ring-emerald-300" : ""
         }`}
         style={{
@@ -200,19 +246,12 @@ function Chip({
         }}
       >
         <div className="min-w-0 pr-12">
-          <div className="truncate text-lg font-semibold leading-tight sm:text-base">{word.word}</div>
+          <div className="truncate text-base font-semibold leading-tight">{word.word}</div>
           {word.pronunciation && (
-            <div className="truncate text-xs font-normal text-white/80 sm:text-[11px]">
+            <div className="truncate text-[11px] font-normal text-white/80">
               {word.pronunciation}
             </div>
           )}
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-[11px] font-medium uppercase tracking-wide text-white/80 sm:text-[10px]">
-            {word.frequency_rank === 1
-              ? "#1 Most common"
-              : `#${word.frequency_rank}`}
-          </span>
         </div>
       </button>
       <button
@@ -223,9 +262,9 @@ function Chip({
           setFlashing(true);
           setTimeout(onAdd, 180);
         }}
-        className="absolute bottom-2 right-2 flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary shadow transition hover:scale-110 sm:h-7 sm:w-7"
+        className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-primary shadow transition hover:scale-110 sm:h-7 sm:w-7"
       >
-        {flashing ? <Check className="h-5 w-5 sm:h-3.5 sm:w-3.5" /> : <Plus className="h-5 w-5 sm:h-3.5 sm:w-3.5" />}
+        {flashing ? <Check className="h-4 w-4 sm:h-3.5 sm:w-3.5" /> : <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />}
       </button>
     </motion.div>
   );
@@ -233,7 +272,8 @@ function Chip({
 
 function ShimmerChip() {
   return (
-    <div className="h-[120px] w-[78vw] max-w-[300px] shrink-0 animate-pulse rounded-xl bg-muted sm:h-[104px] sm:w-[188px]" />
+    <div className="h-[72px] w-[78vw] max-w-[300px] shrink-0 animate-pulse rounded-xl bg-muted sm:h-[64px] sm:w-[188px]" />
   );
+
 }
 

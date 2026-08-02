@@ -17,6 +17,7 @@ import { Route as AuthenticatedWordsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTagsRouteImport } from './routes/_authenticated/tags'
 import { Route as AuthenticatedStatisticsRouteImport } from './routes/_authenticated/statistics'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedPracticeIndexRouteImport } from './routes/_authenticated/practice/index'
 import { Route as AuthenticatedPracticeQuizRouteImport } from './routes/_authenticated/practice/quiz'
 import { Route as AuthenticatedPracticeFlashcardsRouteImport } from './routes/_authenticated/practice/flashcards'
 import { Route as AuthenticatedPracticeAiRouteImport } from './routes/_authenticated/practice/ai'
@@ -61,6 +62,12 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPracticeIndexRoute =
+  AuthenticatedPracticeIndexRouteImport.update({
+    id: '/practice/',
+    path: '/practice/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPracticeQuizRoute =
   AuthenticatedPracticeQuizRouteImport.update({
     id: '/practice/quiz',
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/practice/ai': typeof AuthenticatedPracticeAiRoute
   '/practice/flashcards': typeof AuthenticatedPracticeFlashcardsRoute
   '/practice/quiz': typeof AuthenticatedPracticeQuizRoute
+  '/practice/': typeof AuthenticatedPracticeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -109,6 +117,7 @@ export interface FileRoutesByTo {
   '/practice/ai': typeof AuthenticatedPracticeAiRoute
   '/practice/flashcards': typeof AuthenticatedPracticeFlashcardsRoute
   '/practice/quiz': typeof AuthenticatedPracticeQuizRoute
+  '/practice': typeof AuthenticatedPracticeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,6 +133,7 @@ export interface FileRoutesById {
   '/_authenticated/practice/ai': typeof AuthenticatedPracticeAiRoute
   '/_authenticated/practice/flashcards': typeof AuthenticatedPracticeFlashcardsRoute
   '/_authenticated/practice/quiz': typeof AuthenticatedPracticeQuizRoute
+  '/_authenticated/practice/': typeof AuthenticatedPracticeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/practice/ai'
     | '/practice/flashcards'
     | '/practice/quiz'
+    | '/practice/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/practice/ai'
     | '/practice/flashcards'
     | '/practice/quiz'
+    | '/practice'
   id:
     | '__root__'
     | '/'
@@ -166,6 +178,7 @@ export interface FileRouteTypes {
     | '/_authenticated/practice/ai'
     | '/_authenticated/practice/flashcards'
     | '/_authenticated/practice/quiz'
+    | '/_authenticated/practice/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/practice/': {
+      id: '/_authenticated/practice/'
+      path: '/practice'
+      fullPath: '/practice/'
+      preLoaderRoute: typeof AuthenticatedPracticeIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/practice/quiz': {
       id: '/_authenticated/practice/quiz'
       path: '/practice/quiz'
@@ -273,6 +293,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPracticeAiRoute: typeof AuthenticatedPracticeAiRoute
   AuthenticatedPracticeFlashcardsRoute: typeof AuthenticatedPracticeFlashcardsRoute
   AuthenticatedPracticeQuizRoute: typeof AuthenticatedPracticeQuizRoute
+  AuthenticatedPracticeIndexRoute: typeof AuthenticatedPracticeIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -284,6 +305,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPracticeAiRoute: AuthenticatedPracticeAiRoute,
   AuthenticatedPracticeFlashcardsRoute: AuthenticatedPracticeFlashcardsRoute,
   AuthenticatedPracticeQuizRoute: AuthenticatedPracticeQuizRoute,
+  AuthenticatedPracticeIndexRoute: AuthenticatedPracticeIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

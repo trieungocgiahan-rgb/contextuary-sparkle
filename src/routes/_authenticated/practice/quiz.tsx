@@ -108,8 +108,8 @@ function QuizPage() {
   if (!cfg) {
     return (
       <div className="p-8 text-center">
-        <p className="text-muted-foreground">No practice session. Start one from My Words.</p>
-        <Button className="mt-4" onClick={() => navigate({ to: "/words" })}>Back</Button>
+        <p className="text-muted-foreground">No practice session yet.</p>
+        <Button className="mt-4" onClick={() => navigate({ to: "/practice" })}>Set up a session</Button>
       </div>
     );
   }

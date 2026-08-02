@@ -51,9 +51,22 @@ export const getDailyProgress = createServerFn({ method: "POST" })
     };
   });
 
+export type DailyPickDetails = {
+  ipa?: string | null;
+  vietnamese_meaning?: string | null;
+  nuance_note?: string | null;
+  examples?: string[];
+  collocations?: string[];
+  synonyms?: string[];
+  antonyms?: string[];
+  memory_hint?: string | null;
+  part_of_speech?: string | null;
+  tag_id?: string | null;
+};
+
 export const addDailyPick = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { satWordId: string; date: string }) => {
+  .inputValidator((input: { satWordId: string; date: string; details?: DailyPickDetails }) => {
     if (!input?.satWordId) throw new Error("satWordId required");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(input?.date ?? "")) throw new Error("Bad date");
     return input;
@@ -62,26 +75,43 @@ export const addDailyPick = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: sat, error: sErr } = await supabase
       .from("sat_words")
-      .select("word, pronunciation, vietnamese_meaning, example_sentence, memory_hint")
+      .select(
+        "word, pronunciation, vietnamese_meaning, example_sentence, example_sentences, collocations, synonyms, memory_hint, part_of_speech",
+      )
       .eq("id", data.satWordId)
       .maybeSingle();
     if (sErr) throw sErr;
     if (!sat) throw new Error("Word not found");
+
+    const d = data.details ?? {};
+    const satExamples =
+      sat.example_sentences?.length
+        ? sat.example_sentences
+        : sat.example_sentence
+          ? [sat.example_sentence]
+          : [];
 
     const { data: inserted, error: iErr } = await supabase
       .from("words")
       .insert({
         user_id: userId,
         word: sat.word,
-        ipa: sat.pronunciation,
-        vietnamese_meaning: sat.vietnamese_meaning,
-        examples: sat.example_sentence ? [sat.example_sentence] : [],
-        memory_hint: sat.memory_hint,
+        ipa: d.ipa ?? sat.pronunciation,
+        vietnamese_meaning: d.vietnamese_meaning ?? sat.vietnamese_meaning,
+        nuance_note: d.nuance_note ?? null,
+        examples: d.examples?.length ? d.examples : satExamples,
+        collocations: d.collocations?.length ? d.collocations : (sat.collocations ?? []),
+        synonyms: d.synonyms?.length ? d.synonyms : (sat.synonyms ?? []),
+        antonyms: d.antonyms ?? [],
+        memory_hint: d.memory_hint ?? sat.memory_hint,
+        part_of_speech: d.part_of_speech ?? sat.part_of_speech ?? null,
+        tag_id: d.tag_id ?? null,
         status: "new",
       })
       .select("id")
       .single();
     if (iErr) throw iErr;
+
 
     // Upsert daily counter
     const { data: existing } = await supabase
