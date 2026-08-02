@@ -47,6 +47,7 @@ function WordsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az" | "za">("newest");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewSat, setPreviewSat] = useState<SatWord | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -63,12 +64,19 @@ function WordsPage() {
   const generate = useServerFn(generateWordDetails);
   const validate = useServerFn(validateWord);
 
-  const filtered = words.filter((w) => {
-    if (search && !w.word.toLowerCase().includes(search.toLowerCase())) return false;
-    if (statusFilter !== "all" && w.status !== statusFilter) return false;
-    if (tagFilter !== "all" && w.tag_id !== tagFilter) return false;
-    return true;
-  });
+  const filtered = words
+    .filter((w) => {
+      if (search && !w.word.toLowerCase().includes(search.toLowerCase())) return false;
+      if (statusFilter !== "all" && w.status !== statusFilter) return false;
+      if (tagFilter !== "all" && w.tag_id !== tagFilter) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "az") return a.word.localeCompare(b.word);
+      if (sortBy === "za") return b.word.localeCompare(a.word);
+      if (sortBy === "oldest") return a.created_at.localeCompare(b.created_at);
+      return b.created_at.localeCompare(a.created_at);
+    });
 
   const selected = selectedId ? words.find((w) => w.id === selectedId) ?? null : null;
 
@@ -231,6 +239,18 @@ function WordsPage() {
                 {tags.map((t) => (
                   <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger className="h-11 w-full sm:h-9 sm:w-[180px]">
+                <ArrowUpDown className="mr-2 h-4 w-4 shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Date added (newest)</SelectItem>
+                <SelectItem value="oldest">Date added (oldest)</SelectItem>
+                <SelectItem value="az">Alphabetical (A→Z)</SelectItem>
+                <SelectItem value="za">Alphabetical (Z→A)</SelectItem>
               </SelectContent>
             </Select>
           </div>
