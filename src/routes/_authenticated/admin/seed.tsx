@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 import { isAdminQueryOptions } from "@/lib/queries";
+import { listReviewWords, resolveReviewWord, type ReviewRow } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -12,14 +12,6 @@ export const Route = createFileRoute("/_authenticated/admin/seed")({
   head: () => ({ meta: [{ title: "Seed Review — Admin" }] }),
   component: AdminSeedPage,
 });
-
-type ReviewRow = {
-  id: string;
-  word: string;
-  review_reason: string | null;
-  suggested_correction: string | null;
-  frequency_rank: number;
-};
 
 function AdminSeedPage() {
   const navigate = useNavigate();
@@ -37,21 +29,25 @@ function AdminSeedPage() {
 
   async function refresh() {
     setLoading(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any).rpc("admin_list_review_words");
-    if (error) toast.error(error.message);
-    else setRows((data ?? []) as ReviewRow[]);
+    try {
+      setRows(await listReviewWords());
+    } catch {
+      toast.error("Unable to load review list");
+    }
     setLoading(false);
   }
 
   async function resolve(id: string, action: "approve" | "delete" | "replace", newWord?: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any).rpc("admin_resolve_sat_word", {
-      _id: id, _action: action, _new_word: newWord ?? "",
-    });
-    if (error) toast.error(error.message);
-    else { toast.success("Updated"); qc.invalidateQueries({ queryKey: ["words"] }); refresh(); }
+    try {
+      await resolveReviewWord({ data: { id, action, newWord: newWord ?? "" } });
+      toast.success("Updated");
+      qc.invalidateQueries({ queryKey: ["words"] });
+      refresh();
+    } catch {
+      toast.error("Unable to update word");
+    }
   }
+
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Checking access…</div>;
   if (!admin) return null;
