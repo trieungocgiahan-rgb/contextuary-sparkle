@@ -1,4 +1,6 @@
 // Streams TTS audio via the /api/tts server route and plays PCM chunks.
+import { supabase } from "@/integrations/supabase/client";
+
 export async function speak(text: string): Promise<void> {
   if (!text) return;
   const AudioCtx =
@@ -30,9 +32,15 @@ export async function speak(text: string): Promise<void> {
     playhead += buf.duration;
   };
 
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) throw new Error("Sign in to use audio");
   const res = await fetch("/api/tts", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: JSON.stringify({ text }),
   });
   if (!res.ok || !res.body) throw new Error("TTS failed");
