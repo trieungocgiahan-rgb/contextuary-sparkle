@@ -23,7 +23,47 @@ A Lovable Cloud backend can't be configured from outside Lovable, so use your ow
 (free) project at [supabase.com](https://supabase.com).
 
 Then push the database schema and the two Edge Functions (`ai`, `admin`). Pick whichever
-of these two ways you're comfortable with — both end up in the same place.
+of these three ways fits you — they all end up in the same place. **Option C is recommended**
+if you'll keep developing this with an agent (Claude Code, etc.) rather than by hand: set it
+up once and every future push deploys itself, with no dashboard work at all.
+
+<details>
+<summary><strong>Option C — GitHub Actions (recommended for ongoing development)</strong> (click to expand)</summary>
+
+[`.github/workflows/deploy-supabase.yml`](../.github/workflows/deploy-supabase.yml) pushes the
+schema and functions automatically on every push to `main` that touches `supabase/`. One-time
+setup — add these as **repo secrets** (GitHub repo → **Settings → Secrets and variables →
+Actions → Secrets → New repository secret**):
+
+| Secret               | Where to find it                                                              |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `SUPABASE_ACCESS_TOKEN` | [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens) → Generate new token |
+| `SUPABASE_PROJECT_REF`  | Project → **Settings → General → Reference ID**                              |
+| `SUPABASE_DB_PASSWORD`  | The database password you set when creating the project. Forgot it? **Settings → Database → Reset database password** |
+| `AI_API_KEY`            | Your AI provider key — see [step 2](#2-add-your-ai-key)                        |
+| `AI_MODEL`              | e.g. `gemini-2.5-flash`                                                        |
+| `AI_BASE_URL`           | e.g. `https://generativelanguage.googleapis.com/v1beta/openai`                 |
+
+Each is a single paste into a plain text box — no code editor involved. After adding all six,
+push anything under `supabase/` to `main` (or run the workflow manually from the **Actions**
+tab) and it deploys everything for you. **Do not also run Option A or B** — that would apply the
+same migrations twice.
+
+If you already ran some of the SQL by hand (Option A) and hit an `already exists` error, your
+project's `public` schema is partly set up. Wipe it clean first so the workflow's `db push`
+starts from nothing — Supabase SQL Editor → New query → run:
+
+```sql
+drop schema public cascade;
+create schema public;
+grant usage on schema public to postgres, anon, authenticated, service_role;
+grant create on schema public to postgres, service_role;
+```
+
+⚠️ This deletes all data in that project. Fine for a fresh project with no real users yet;
+never run it on a project you're already using.
+
+</details>
 
 <details>
 <summary><strong>Option A — Dashboard only, no terminal</strong> (click to expand)</summary>
