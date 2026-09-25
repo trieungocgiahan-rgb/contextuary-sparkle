@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { ArrowRight, Check, Play, Plus, Star, Volume2 } from "lucide-react";
+import { ArrowRight, Check, Play } from "lucide-react";
 import { DriftingBackdrop, Sparkle } from "./decorations";
-import { speakText } from "@/lib/speech";
+import { HeroShowcase } from "./hero-showcase";
 
 const CHIPS = ["ubiquitous", "mitigate", "salient", "arbitrary"];
 const POINTS = ["Vietnamese meanings", "SAT-style examples", "Quizzes & flashcards"];
@@ -103,76 +103,7 @@ export function Hero() {
           </ul>
         </motion.div>
 
-        <div className="relative flex min-h-[460px] items-center justify-center">
-          <div className="absolute inset-8 rounded-full bg-fuchsia-400/25 blur-3xl" aria-hidden />
-
-          <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute left-0 top-2 w-[78%] max-w-sm rounded-2xl border border-white/15 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-md"
-          >
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
-              SAT reading passage
-            </div>
-            <p className="mt-2 text-sm leading-relaxed">
-              The{" "}
-              <span className="rounded bg-white px-1 font-semibold text-primary">ubiquitous</span>{" "}
-              influence of technology has transformed the way we communicate, making information
-              accessible at our fingertips.
-            </p>
-          </motion.div>
-
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="absolute bottom-0 right-0 w-[84%] max-w-sm rounded-2xl bg-card p-5 text-foreground shadow-2xl shadow-black/40"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-xl font-bold">ubiquitous</div>
-                <button
-                  type="button"
-                  onClick={() => speakText("ubiquitous")}
-                  className="mt-0.5 inline-flex items-center gap-1.5 rounded-md text-xs text-muted-foreground transition-colors hover:text-primary"
-                  aria-label="Hear how ubiquitous is pronounced"
-                >
-                  /juːˈbɪkwɪtəs/ <Volume2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-status-mastered px-2 py-0.5 text-[10px] font-semibold text-status-mastered-fg">
-                  Mastered
-                </span>
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-              </div>
-            </div>
-            <p className="mt-3 text-sm font-semibold">
-              xuất hiện ở khắp nơi, phổ biến đến mức khó tránh khỏi
-            </p>
-            <div className="mt-3 rounded-lg border-l-4 border-primary bg-accent/60 p-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wide text-primary">
-                SAT context
-              </div>
-              <p className="mt-1 text-xs text-foreground/75">
-                Dùng khi nói về sự hiện diện rộng rãi trong đời sống, công nghệ, xã hội, v.v.
-              </p>
-            </div>
-            <div className="mt-3">
-              <div className="text-[10px] font-bold uppercase tracking-wide text-spark">Example</div>
-              <p className="mt-1 text-xs">
-                Smartphones have become{" "}
-                <span className="font-semibold text-primary">ubiquitous</span> in modern life.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => addWord("ubiquitous")}
-              className="btn-ombre mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold transition-all"
-            >
-              <Plus className="h-3.5 w-3.5" /> Save to my library
-            </button>
-          </motion.div>
-        </div>
+        <HeroShowcase onAddWord={addWord} />
       </div>
     </section>
   );
