@@ -20,7 +20,36 @@ The pages, components, quiz engine and database schema are the same.
 ### 1. Create a Supabase project
 
 A Lovable Cloud backend can't be configured from outside Lovable, so use your own
-(free) project at [supabase.com](https://supabase.com). Then, from the **repo root**, run:
+(free) project at [supabase.com](https://supabase.com).
+
+Then push the database schema and the two Edge Functions (`ai`, `admin`). Pick whichever
+of these two ways you're comfortable with — both end up in the same place.
+
+<details>
+<summary><strong>Option A — Dashboard only, no terminal</strong> (click to expand)</summary>
+
+**Tables:** open your project → **SQL Editor** → **New query**. Copy the whole contents of
+[`supabase/migrations/`](../supabase/migrations) — all 7 `.sql` files, in filename order (they're
+timestamped, so oldest first) — paste them one after another into the same query, then click
+**Run**. This creates every table, function and permission the app needs.
+
+**Edge Functions:** open **Edge Functions** in the sidebar → **Deploy a new function**.
+- Name it exactly `ai`, paste the full contents of
+  [`supabase/functions/ai/index.ts`](../supabase/functions/ai/index.ts), and deploy.
+- Repeat for a function named exactly `admin`, pasting
+  [`supabase/functions/admin/index.ts`](../supabase/functions/admin/index.ts).
+
+Both files are self-contained (no other files to add) so one paste each is enough.
+
+**Secrets:** still in **Edge Functions**, open **Secrets** (or **Manage secrets**) and add the
+three keys from [step 2](#2-add-your-ai-key) below, one at a time.
+
+</details>
+
+<details>
+<summary><strong>Option B — Supabase CLI</strong> (click to expand)</summary>
+
+From the **repo root**:
 
 ```sh
 npx supabase login
@@ -29,10 +58,20 @@ npx supabase db push                      # creates the tables from supabase/mig
 npx supabase functions deploy             # deploys supabase/functions (ai, admin)
 ```
 
+</details>
+
 ### 2. Add your AI key
 
 The `ai` function works with any OpenAI-compatible API. For example, with Google Gemini
 (the model the Lovable version used; get a key at https://aistudio.google.com/apikey):
+
+| Secret name   | Value                                                          |
+| ------------- | --------------------------------------------------------------- |
+| `AI_API_KEY`  | your provider key                                                |
+| `AI_MODEL`    | `gemini-2.5-flash`                                               |
+| `AI_BASE_URL` | `https://generativelanguage.googleapis.com/v1beta/openai`       |
+
+Using the CLI instead of the Dashboard:
 
 ```sh
 npx supabase secrets set \
@@ -41,7 +80,7 @@ npx supabase secrets set \
   AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
 ```
 
-For OpenAI, omit `AI_BASE_URL` and set `AI_MODEL` to a model such as `gpt-4.1-mini`.
+For OpenAI, leave out `AI_BASE_URL` and set `AI_MODEL` to a model such as `gpt-4.1-mini`.
 The key stays on Supabase and is never sent to the browser.
 
 ### 3. Configure sign-in
