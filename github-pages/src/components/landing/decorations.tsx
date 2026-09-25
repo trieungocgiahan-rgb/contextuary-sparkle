@@ -29,13 +29,15 @@ const DRIFT_WORDS = [
   "verbose",
 ];
 
-export function DriftingBackdrop() {
+export function DriftingBackdrop({ tone = "dark" }: { tone?: "dark" | "light" }) {
+  const wordClass = tone === "light" ? "text-white/[0.08]" : "text-primary/10";
+  const sparkClass = tone === "light" ? "text-pink-200/50" : "text-primary/30";
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {DRIFT_WORDS.map((w, i) => (
         <motion.span
           key={w}
-          className="absolute font-serif italic text-primary/10 select-none"
+          className={`absolute select-none font-serif italic ${wordClass}`}
           style={{
             fontSize: 24 + ((i * 7) % 28),
             top: `${(i * 13) % 90}%`,
@@ -59,7 +61,7 @@ export function DriftingBackdrop() {
       {Array.from({ length: 10 }).map((_, i) => (
         <motion.div
           key={i}
-          className="absolute text-primary/30"
+          className={`absolute ${sparkClass}`}
           style={{
             top: `${(i * 37) % 95}%`,
             left: `${(i * 53) % 95}%`,

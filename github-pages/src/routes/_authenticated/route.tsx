@@ -3,11 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar, MobileTabBar, MobileTopBar, SIDEBAR_COLLAPSE_KEY } from "@/components/app-sidebar";
 import { usePersistentToggle } from "@/hooks/use-persistent-toggle";
 import { cn } from "@/lib/utils";
+import { savePostAuthTarget } from "@/lib/post-auth";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
+    if (error || !data.user) {
+      savePostAuthTarget({ to: location.pathname, search: location.search });
+      throw redirect({ to: "/auth" });
+    }
     return { user: data.user };
   },
   component: AuthenticatedLayout,

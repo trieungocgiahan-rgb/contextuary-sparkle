@@ -1,60 +1,87 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { logoUrl } from "@/lib/assets";
+import { cn } from "@/lib/utils";
 
-
+// Every link points at a section that exists on this page.
 const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "How it works", href: "#how" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "About", href: "#about" },
+  { label: "Features", hash: "features" },
+  { label: "How it works", hash: "how" },
+  { label: "Practice", hash: "practice" },
+  { label: "Progress", hash: "progress" },
 ];
 
 export function NavBar() {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Over the dark hero the nav is light-on-dark; once scrolled it becomes a white bar.
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-all duration-200 ${
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         scrolled
-          ? "border-b border-border/60 bg-background/80 backdrop-blur-md"
-          : "bg-transparent"
-      }`}
+          ? "border-b border-border/70 bg-background/85 shadow-sm backdrop-blur-md"
+          : "bg-transparent",
+      )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <a href="#top" className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <img src={logoUrl} alt="Contextuary logo" className="h-8 w-8 rounded-lg" />
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
+        <Link
+          to="/"
+          hash="top"
+          className={cn(
+            "flex items-center gap-2.5 text-lg font-semibold transition-colors",
+            scrolled ? "text-foreground" : "text-white",
+          )}
+        >
+          <img src={logoUrl} alt="" className="h-8 w-8 rounded-lg shadow-sm" />
           Contextuary
-        </a>
+        </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            <Link
+              key={l.hash}
+              to="/"
+              hash={l.hash}
+              className={cn(
+                "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                scrolled
+                  ? "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  : "text-white/80 hover:bg-white/10 hover:text-white",
+              )}
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
+
         <div className="flex items-center gap-2">
           <Link
             to="/auth"
-            className="hidden rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-accent sm:inline-flex"
+            className={cn(
+              "hidden rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:inline-flex",
+              scrolled
+                ? "text-foreground hover:bg-accent"
+                : "text-white hover:bg-white/10",
+            )}
           >
             Log in
           </Link>
           <Link
-            to="/auth"
-            className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow-md"
+            to="/words"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all",
+              scrolled ? "btn-ombre" : "bg-white text-primary shadow-lg hover:bg-white/90",
+            )}
           >
-            Sign up
+            Start free <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

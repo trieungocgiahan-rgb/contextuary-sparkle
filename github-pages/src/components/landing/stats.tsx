@@ -1,5 +1,6 @@
+import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, ShieldCheck, TrendingUp, Flame } from "lucide-react";
+import { ArrowRight, BookOpen, ShieldCheck, TrendingUp, Flame } from "lucide-react";
 import { SectionReveal } from "./decorations";
 
 function useCountUp(target: number, duration = 1200) {
@@ -68,12 +69,12 @@ function StatCard({ stat, i }: { stat: (typeof STATS)[number]; i: number }) {
   const { ref, value } = useCountUp(stat.value);
   return (
     <SectionReveal delay={i * 0.05}>
-      <div ref={ref} className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
+      <div ref={ref} className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
         <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
           <stat.icon className="h-4 w-4" style={{ color: stat.color }} />
           {stat.label}
         </div>
-        <div className="mt-2 text-3xl font-bold text-foreground">
+        <div className="mt-2 text-4xl font-bold tracking-tight text-foreground">
           {value.toLocaleString()}
           {stat.suffix}
         </div>
@@ -88,15 +89,29 @@ function StatCard({ stat, i }: { stat: (typeof STATS)[number]; i: number }) {
 
 export function Stats() {
   return (
-    <section id="about" className="py-24 md:py-32">
+    <section id="progress" className="scroll-mt-20 py-24 md:py-28">
       <div className="mx-auto max-w-7xl px-6">
-        <SectionReveal className="text-center">
-          <h2 className="text-3xl font-bold text-foreground md:text-4xl">Track your progress</h2>
+        <SectionReveal className="mx-auto max-w-2xl text-center">
+          <div className="text-xs font-bold uppercase tracking-widest text-spark">Progress</div>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-5xl">
+            See your vocabulary <span className="text-ombre">grow</span>
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            An example of what your Statistics page tracks as you study.
+          </p>
         </SectionReveal>
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {STATS.map((s, i) => (
             <StatCard key={s.label} stat={s} i={i} />
           ))}
+        </div>
+        <div className="mt-10 text-center">
+          <Link
+            to="/statistics"
+            className="inline-flex items-center gap-2 rounded-lg border-2 border-primary px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+          >
+            View my statistics <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </section>

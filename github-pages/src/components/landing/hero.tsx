@@ -1,138 +1,175 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Sparkles, Volume2, Star } from "lucide-react";
-import { DriftingBackdrop } from "./decorations";
+import { useState } from "react";
+import { ArrowRight, Check, Play, Plus, Star, Volume2 } from "lucide-react";
+import { DriftingBackdrop, Sparkle } from "./decorations";
+import { speakText } from "@/lib/speech";
 
-const CHIPS = ["Ubiquitous", "Mitigate", "Salient", "Arbitrary"];
+const CHIPS = ["ubiquitous", "mitigate", "salient", "arbitrary"];
+const POINTS = ["Vietnamese meanings", "SAT-style examples", "Quizzes & flashcards"];
 
 export function Hero() {
   const navigate = useNavigate();
+  const [word, setWord] = useState("");
+
+  // Adding a word is the app's core action: send the visitor straight to it. Signed-out
+  // visitors go through sign-in first and land back on the prefilled Add Word dialog.
+  function addWord(w: string) {
+    const clean = w.trim().toLowerCase();
+    navigate({ to: "/words", search: clean ? { add: clean } : {} });
+  }
+
   return (
-    <section id="top" className="relative overflow-hidden pb-24 pt-12 md:pb-32 md:pt-20">
-      <DriftingBackdrop />
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-2 lg:gap-8">
+    <section
+      id="top"
+      className="relative overflow-hidden rounded-b-[2.5rem] bg-ombre pb-20 pt-28 text-white md:pb-28 md:pt-36"
+    >
+      <DriftingBackdrop tone="light" />
+      <div className="relative mx-auto grid max-w-7xl gap-14 px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="flex flex-col justify-center"
         >
-          <h1 className="text-5xl font-bold leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur">
+            <Sparkle size={12} className="text-pink-200" />
+            SAT vocabulary, explained in Vietnamese
+          </span>
+          <h1 className="mt-6 text-5xl font-bold leading-[1.02] tracking-tight md:text-6xl lg:text-7xl">
             Understand words.
             <br />
-            <span className="font-serif italic text-primary">In context.</span>
+            <span className="text-ombre-light font-serif font-normal italic">In context.</span>
             <br />
             For real.
           </h1>
-          <p className="mt-6 max-w-md text-base text-muted-foreground md:text-lg">
-            Contextuary helps you master SAT vocabulary through real context,
-            smart explanations, and AI-generated practice.
+          <p className="mt-6 max-w-md text-base text-white/80 md:text-lg">
+            Add any SAT word and get its Vietnamese meaning, real SAT-style examples and a memory
+            hint. Then lock it in with quizzes, flashcards and AI challenges.
           </p>
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              navigate({ to: "/auth" });
+              addWord(word);
             }}
-            className="mt-8 flex max-w-md items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-sm"
+            className="mt-8 flex max-w-md items-center gap-2 rounded-2xl bg-white p-2 shadow-2xl shadow-black/30"
           >
             <input
-              placeholder="Paste any SAT passage or try a word…"
-              className="flex-1 border-0 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              value={word}
+              onChange={(e) => setWord(e.target.value)}
+              placeholder="Type any SAT word…"
+              aria-label="SAT word to add"
+              className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
             <button
               type="submit"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-all hover:opacity-90"
-              aria-label="Try Contextuary"
+              className="btn-ombre inline-flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all"
             >
-              <Sparkles className="h-4 w-4" />
+              Add word <ArrowRight className="h-4 w-4" />
             </button>
           </form>
+
           <div className="mt-4 flex max-w-md flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground">Try an example:</span>
+            <span className="text-xs text-white/60">Try:</span>
             {CHIPS.map((c) => (
               <button
                 key={c}
-                onClick={() => navigate({ to: "/auth" })}
-                className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground transition-all hover:scale-105"
+                type="button"
+                onClick={() => addWord(c)}
+                className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white transition-all hover:bg-white/20"
               >
                 {c}
               </button>
             ))}
           </div>
-          <div className="mt-8 flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {["#c4b5fd", "#a78bfa", "#8b5cf6"].map((c, i) => (
-                <div
-                  key={i}
-                  className="h-8 w-8 rounded-full border-2 border-background"
-                  style={{ background: c }}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-muted-foreground">
-              Loved by 3,000+ ambitious learners
+
+          <Link
+            to="/"
+            hash="practice"
+            className="mt-8 inline-flex w-fit items-center gap-2 text-sm font-semibold text-white transition-opacity hover:opacity-80"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15">
+              <Play className="h-3.5 w-3.5 fill-current" />
             </span>
-          </div>
+            Try a sample quiz, no sign-up
+          </Link>
+          <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/75">
+            {POINTS.map((p) => (
+              <li key={p} className="flex items-center gap-1.5">
+                <Check className="h-4 w-4 text-pink-200" /> {p}
+              </li>
+            ))}
+          </ul>
         </motion.div>
 
-        <div className="relative flex min-h-[440px] items-center justify-center">
-          <svg
-            className="absolute inset-0 h-full w-full text-primary/20"
-            viewBox="0 0 400 400"
-            fill="none"
-            aria-hidden
-          >
-            <ellipse cx="200" cy="200" rx="180" ry="60" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-            <ellipse cx="200" cy="200" rx="140" ry="120" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" transform="rotate(30 200 200)" />
-          </svg>
+        <div className="relative flex min-h-[460px] items-center justify-center">
+          <div className="absolute inset-8 rounded-full bg-fuchsia-400/25 blur-3xl" aria-hidden />
 
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute left-0 top-4 w-[75%] max-w-sm rounded-2xl border border-border bg-card p-5 shadow-lg"
+            className="absolute left-0 top-2 w-[78%] max-w-sm rounded-2xl border border-white/15 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-md"
           >
-            <p className="text-sm leading-relaxed text-foreground">
-              The <span className="rounded bg-primary/15 px-1 font-semibold text-primary">ubiquitous</span> influence of technology has transformed the way we communicate, making information accessible at our fingertips.
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
+              SAT reading passage
+            </div>
+            <p className="mt-2 text-sm leading-relaxed">
+              The{" "}
+              <span className="rounded bg-white px-1 font-semibold text-primary">ubiquitous</span>{" "}
+              influence of technology has transformed the way we communicate, making information
+              accessible at our fingertips.
             </p>
           </motion.div>
 
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="absolute bottom-0 right-0 w-[80%] max-w-sm rounded-2xl border border-border bg-card p-5 shadow-xl"
+            className="absolute bottom-0 right-0 w-[84%] max-w-sm rounded-2xl bg-card p-5 text-foreground shadow-2xl shadow-black/40"
           >
             <div className="flex items-start justify-between">
               <div>
-                <div className="text-lg font-semibold text-foreground">ubiquitous</div>
-                <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>/juːˈbɪkwɪtəs/</span>
-                  <Volume2 className="h-3.5 w-3.5" />
-                </div>
+                <div className="text-xl font-bold">ubiquitous</div>
+                <button
+                  type="button"
+                  onClick={() => speakText("ubiquitous")}
+                  className="mt-0.5 inline-flex items-center gap-1.5 rounded-md text-xs text-muted-foreground transition-colors hover:text-primary"
+                  aria-label="Hear how ubiquitous is pronounced"
+                >
+                  /juːˈbɪkwɪtəs/ <Volume2 className="h-3.5 w-3.5" />
+                </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-status-mastered px-2 py-0.5 text-[10px] font-medium text-status-mastered-fg">
+                <span className="rounded-full bg-status-mastered px-2 py-0.5 text-[10px] font-semibold text-status-mastered-fg">
                   Mastered
                 </span>
-                <Star className="h-4 w-4 text-muted-foreground" />
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
               </div>
             </div>
-            <p className="mt-3 text-sm font-medium text-foreground">
+            <p className="mt-3 text-sm font-semibold">
               xuất hiện ở khắp nơi, phổ biến đến mức khó tránh khỏi
             </p>
-            <div className="mt-3 rounded-lg bg-accent/50 p-2.5">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-primary">SAT Context</div>
-              <p className="mt-1 text-xs text-muted-foreground">
+            <div className="mt-3 rounded-lg border-l-4 border-primary bg-accent/60 p-2.5">
+              <div className="text-[10px] font-bold uppercase tracking-wide text-primary">
+                SAT context
+              </div>
+              <p className="mt-1 text-xs text-foreground/75">
                 Dùng khi nói về sự hiện diện rộng rãi trong đời sống, công nghệ, xã hội, v.v.
               </p>
             </div>
             <div className="mt-3">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-primary">Example</div>
-              <p className="mt-1 text-xs text-foreground">
-                Smartphones have become <span className="font-semibold text-primary">ubiquitous</span> in modern life.
+              <div className="text-[10px] font-bold uppercase tracking-wide text-spark">Example</div>
+              <p className="mt-1 text-xs">
+                Smartphones have become{" "}
+                <span className="font-semibold text-primary">ubiquitous</span> in modern life.
               </p>
             </div>
-            <button className="mt-4 w-full rounded-lg bg-primary py-2 text-xs font-medium text-primary-foreground transition-all hover:opacity-90">
-              + Save to library
+            <button
+              type="button"
+              onClick={() => addWord("ubiquitous")}
+              className="btn-ombre mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold transition-all"
+            >
+              <Plus className="h-3.5 w-3.5" /> Save to my library
             </button>
           </motion.div>
         </div>

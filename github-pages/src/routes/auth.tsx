@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ArrowRight, Shield, Sparkles, Heart } from "lucide-react";
 import { logoUrl, signinBgUrl } from "@/lib/assets";
+import { consumePostAuthTarget } from "@/lib/post-auth";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -54,9 +55,21 @@ function AuthPage() {
   const [quoteIdx, setQuoteIdx] = useState(0);
 
   useEffect(() => {
+    let done = false;
+    const goOn = () => {
+      if (done) return;
+      done = true;
+      const target = consumePostAuthTarget() ?? { to: "/words" };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      navigate({ to: target.to as any, search: target.search as any, replace: true });
+    };
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/words", replace: true });
+      if (data.session) goOn();
     });
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") goOn();
+    });
+    return () => data.subscription.unsubscribe();
   }, [navigate]);
 
   useEffect(() => {
@@ -249,9 +262,9 @@ function AuthPage() {
         <div className="mt-10 flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
           <p>© {new Date().getFullYear()} Contextuary. All rights reserved.</p>
           <div className="flex items-center gap-5">
-            <Link to="/" className="hover:text-foreground">Privacy</Link>
-            <Link to="/" className="hover:text-foreground">Terms</Link>
-            <Link to="/" className="hover:text-foreground">Contact</Link>
+            <Link to="/" className="hover:text-foreground">Home</Link>
+            <Link to="/" hash="how" className="hover:text-foreground">How it works</Link>
+            <Link to="/" hash="practice" className="hover:text-foreground">Try a sample quiz</Link>
           </div>
         </div>
       </motion.div>

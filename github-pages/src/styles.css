@@ -21,6 +21,7 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-glow: var(--primary-glow);
+  --color-spark: var(--spark);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -73,27 +74,34 @@
 :root {
   --radius: 0.875rem;
 
-  /* Contextuary palette: deep violet on lavender */
-  --background: oklch(0.978 0.012 300);
-  --foreground: oklch(0.22 0.05 285);
+  /* Contextuary palette: logo violet on near-white, with a magenta spark for energy */
+  --background: oklch(0.99 0.004 300);
+  --foreground: oklch(0.18 0.06 285);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.05 285);
+  --card-foreground: oklch(0.18 0.06 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.05 285);
-  --primary: oklch(0.52 0.24 288);
+  --popover-foreground: oklch(0.18 0.06 285);
+  --primary: oklch(0.48 0.26 285);
   --primary-foreground: oklch(0.99 0.01 300);
-  --primary-glow: oklch(0.72 0.19 300);
-  --secondary: oklch(0.96 0.02 300);
-  --secondary-foreground: oklch(0.35 0.12 285);
-  --muted: oklch(0.96 0.015 300);
-  --muted-foreground: oklch(0.5 0.03 285);
-  --accent: oklch(0.94 0.04 300);
-  --accent-foreground: oklch(0.35 0.15 285);
+  --primary-glow: oklch(0.7 0.22 310);
+  --spark: oklch(0.66 0.26 345);
+  --secondary: oklch(0.955 0.025 295);
+  --secondary-foreground: oklch(0.32 0.15 285);
+  --muted: oklch(0.96 0.012 295);
+  --muted-foreground: oklch(0.45 0.035 285);
+  --accent: oklch(0.93 0.05 295);
+  --accent-foreground: oklch(0.34 0.18 285);
   --destructive: oklch(0.6 0.24 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.02 300);
-  --input: oklch(0.92 0.02 300);
-  --ring: oklch(0.52 0.24 288);
+  --border: oklch(0.9 0.025 295);
+  --input: oklch(0.88 0.03 295);
+  --ring: oklch(0.48 0.26 285);
+
+  /* Ombre: midnight indigo → logo violet → magenta */
+  --ombre-1: oklch(0.2 0.1 280);
+  --ombre-2: oklch(0.36 0.2 283);
+  --ombre-3: oklch(0.5 0.26 290);
+  --ombre-4: oklch(0.62 0.26 330);
   --chart-1: oklch(0.55 0.22 288);
   --chart-2: oklch(0.7 0.15 190);
   --chart-3: oklch(0.65 0.2 45);
@@ -180,5 +188,43 @@
     font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  /* Deep ombre band for heroes and feature highlights */
+  .bg-ombre {
+    background:
+      radial-gradient(120% 80% at 85% 10%, color-mix(in oklch, var(--ombre-4) 55%, transparent), transparent 60%),
+      radial-gradient(90% 70% at 10% 100%, color-mix(in oklch, var(--ombre-3) 60%, transparent), transparent 65%),
+      linear-gradient(160deg, var(--ombre-1) 0%, var(--ombre-2) 45%, var(--ombre-3) 100%);
+  }
+  /* Vertical ombre for the app sidebar */
+  .bg-sidebar-ombre {
+    background: linear-gradient(180deg, var(--ombre-1) 0%, var(--ombre-2) 70%, color-mix(in oklch, var(--ombre-3) 80%, var(--ombre-2)) 100%);
+  }
+  /* Gradient text that reads on dark ombre backgrounds */
+  .text-ombre-light {
+    background: linear-gradient(90deg, oklch(0.9 0.08 300), oklch(0.82 0.16 330) 55%, oklch(0.86 0.13 20));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Gradient text for light backgrounds */
+  .text-ombre {
+    background: linear-gradient(90deg, var(--primary), var(--spark));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Primary call-to-action */
+  .btn-ombre {
+    background: linear-gradient(135deg, var(--primary) 0%, oklch(0.55 0.27 305) 55%, var(--spark) 100%);
+    color: var(--primary-foreground);
+    box-shadow: 0 10px 30px -10px color-mix(in oklch, var(--primary) 70%, transparent);
+  }
+  .btn-ombre:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 14px 34px -10px color-mix(in oklch, var(--spark) 70%, transparent);
   }
 }
