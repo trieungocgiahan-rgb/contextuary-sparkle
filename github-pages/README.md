@@ -38,13 +38,14 @@ Actions → Secrets → New repository secret**):
 | Secret               | Where to find it                                                              |
 | --------------------- | ------------------------------------------------------------------------------ |
 | `SUPABASE_ACCESS_TOKEN` | [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens) → Generate new token |
-| `SUPABASE_PROJECT_REF`  | Project → **Settings → General → Reference ID**                              |
+| `SUPABASE_PROJECT_REF`  | Project → **Settings → General → Project ID** (a ~20-character string; not the project name, and not a URL) |
 | `SUPABASE_DB_PASSWORD`  | The database password you set when creating the project. Forgot it? **Settings → Database → Reset database password** |
+| `SUPABASE_REGION`       | Project → **Settings → General → Project region**, e.g. `ap-southeast-2`     |
 | `AI_API_KEY`            | Your AI provider key — see [step 2](#2-add-your-ai-key)                        |
 | `AI_MODEL`              | e.g. `gemini-2.5-flash`                                                        |
 | `AI_BASE_URL`           | e.g. `https://generativelanguage.googleapis.com/v1beta/openai`                 |
 
-Each is a single paste into a plain text box — no code editor involved. After adding all six,
+Each is a single paste into a plain text box — no code editor involved. After adding all seven,
 push anything under `supabase/` to `main` (or run the workflow manually from the **Actions**
 tab) and it deploys everything for you. **Do not also run Option A or B** — that would apply the
 same migrations twice.

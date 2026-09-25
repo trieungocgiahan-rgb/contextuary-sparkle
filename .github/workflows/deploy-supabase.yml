@@ -4,10 +4,14 @@
 # One-time setup — add these as repo Secrets (Settings → Secrets and variables →
 # Actions → Secrets → New repository secret):
 #   SUPABASE_ACCESS_TOKEN   supabase.com/dashboard/account/tokens
-#   SUPABASE_PROJECT_REF    Project Settings → General → Reference ID
+#   SUPABASE_PROJECT_REF    Project Settings → General → Project ID
 #   SUPABASE_DB_PASSWORD    the database password you set when creating the project
 #                            (Project Settings → Database → Reset database password
 #                            if you don't remember it)
+#   SUPABASE_REGION          Project Settings → General → Project region
+#                            (e.g. ap-southeast-2 — used to reach the DB through the
+#                            Session Pooler, since the direct db.<ref>.supabase.co
+#                            host doesn't resolve from GitHub's runners)
 #   AI_API_KEY               your AI provider key
 #   AI_MODEL                 e.g. gemini-2.5-flash
 #   AI_BASE_URL               e.g. https://generativelanguage.googleapis.com/v1beta/openai
@@ -39,22 +43,11 @@ jobs:
       # branches (a paid-only feature) before it gets to anything we need. Every
       # command below is passed --project-ref (or a direct DB URL) instead.
       #
-      # The direct db.<ref>.supabase.co host doesn't resolve from GitHub's runners
-      # (Supabase's direct-connect DNS isn't reachable from most serverless/CI
-      # environments) — go through the Session Pooler instead, which needs the
-      # project's region. Fetch it from the Management API rather than hardcoding it.
+      # Goes through the Session Pooler rather than a direct connection: the direct
+      # db.<ref>.supabase.co host doesn't resolve from GitHub's runners.
       - name: Push database schema
         run: |
-          response=$(curl -sS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            "https://api.supabase.com/v1/projects/${{ secrets.SUPABASE_PROJECT_REF }}")
-          echo "Management API response: $response"
-          region=$(echo "$response" | jq -r '.region')
-          echo "Project region: $region"
-          if [ -z "$region" ] || [ "$region" = "null" ]; then
-            echo "::error::Could not determine the project's region from the Management API."
-            exit 1
-          fi
-          supabase db push --db-url "postgresql://postgres.${{ secrets.SUPABASE_PROJECT_REF }}:${{ secrets.SUPABASE_DB_PASSWORD }}@aws-0-$region.pooler.supabase.com:5432/postgres"
+          supabase db push --db-url "postgresql://postgres.${{ secrets.SUPABASE_PROJECT_REF }}:${{ secrets.SUPABASE_DB_PASSWORD }}@aws-0-${{ secrets.SUPABASE_REGION }}.pooler.supabase.com:5432/postgres"
 
       - name: Deploy Edge Functions
         run: supabase functions deploy --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
