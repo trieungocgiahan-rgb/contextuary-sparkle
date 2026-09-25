@@ -31,6 +31,30 @@ class HttpError extends Error {
   }
 }
 
+// New-format Supabase API keys (sb_publishable_…, sb_secret_…) are opaque strings, not
+// JWTs. supabase-js defaults to sending them as `Authorization: Bearer <key>` whenever a
+// client has no other Authorization header set, which the gateway rejects as an invalid
+// JWT for the service-role client below — strip that default and rely on `apikey` alone.
+function isNewSupabaseApiKey(value: string): boolean {
+  return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
+}
+
+function createSupabaseFetch(supabaseKey: string): typeof fetch {
+  return (input, init) => {
+    const headers = new Headers(
+      typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined,
+    );
+    if (init?.headers) {
+      new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+    }
+    if (isNewSupabaseApiKey(supabaseKey) && headers.get("Authorization") === `Bearer ${supabaseKey}`) {
+      headers.delete("Authorization");
+    }
+    headers.set("apikey", supabaseKey);
+    return fetch(input, { ...init, headers });
+  };
+}
+
 /**
  * Verifies the caller's Supabase session and returns a client that acts as that user,
  * so row-level security still applies to everything the function reads or writes.
@@ -81,11 +105,11 @@ serve(async (req) => {
     .maybeSingle();
   if (!role) throw new HttpError(403, "Forbidden");
 
-  const admin = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    { auth: { persistSession: false, autoRefreshToken: false } },
-  );
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceRoleKey, {
+    global: { fetch: createSupabaseFetch(serviceRoleKey) },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
   if (body.action === "list") {
