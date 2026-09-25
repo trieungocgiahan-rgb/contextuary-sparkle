@@ -83,15 +83,11 @@ select id, 'admin' from auth.users where email = 'you@example.com';
 
 The site is published at `https://YOUR-GITHUB-USERNAME.github.io/contextuary-sparkle/`.
 
-### 6. Your images
+### 6. Images
 
-The Lovable version's logo and sign-in background are stored on Lovable's servers.
-Download them from your Lovable project and put them in `public/`:
-
-- `public/logo.svg` is a placeholder logo. Replace it with your own, keeping the name,
-  or update `src/lib/assets.ts` if you use a different name.
-- `public/signin-bg.png` is the sign-in background. Until you add it, a soft gradient
-  is shown.
+`public/logo.png` (logo and favicon) and `public/signin-bg.jpg` (sign-in background)
+are served from the site's base path. Replace them to change the artwork, or update
+`src/lib/assets.ts` if you rename them.
 
 ## Local development
 

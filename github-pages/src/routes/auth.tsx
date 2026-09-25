@@ -103,10 +103,7 @@ function AuthPage() {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-cover bg-center lg:bg-[position:50%_100%]"
-        style={{
-          // Falls back to the gradient until you add public/signin-bg.png.
-          backgroundImage: `url(${signinBgUrl}), radial-gradient(circle at 20% 20%, rgba(139,92,246,0.18), transparent 55%), radial-gradient(circle at 80% 90%, rgba(103,51,220,0.14), transparent 50%)`,
-        }}
+        style={{ backgroundImage: `url(${signinBgUrl})` }}
       />
 
       <motion.div
@@ -178,7 +175,7 @@ function AuthPage() {
                   this browser.
                 </p>
               ) : (
-                <form onSubmit={emailLink} className="mt-4 flex gap-2">
+                <form onSubmit={emailLink} className="mt-4 flex flex-col gap-2 sm:flex-row">
                   <Input
                     type="email"
                     required
