@@ -1,9 +1,11 @@
 
 -- Status enum
-CREATE TYPE public.word_status AS ENUM ('new', 'learning', 'reviewing', 'mastered');
+DO $$ BEGIN
+  CREATE TYPE public.word_status AS ENUM ('new', 'learning', 'reviewing', 'mastered');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Profiles
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   display_name text,
   daily_goal integer NOT NULL DEFAULT 10,
@@ -14,10 +16,12 @@ CREATE TABLE public.profiles (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
 GRANT ALL ON public.profiles TO service_role;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "own profile" ON public.profiles FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+DO $$ BEGIN
+  CREATE POLICY "own profile" ON public.profiles FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Tags
-CREATE TABLE public.tags (
+CREATE TABLE IF NOT EXISTS public.tags (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name text NOT NULL,
@@ -28,10 +32,12 @@ CREATE TABLE public.tags (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.tags TO authenticated;
 GRANT ALL ON public.tags TO service_role;
 ALTER TABLE public.tags ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "own tags" ON public.tags FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "own tags" ON public.tags FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Words
-CREATE TABLE public.words (
+CREATE TABLE IF NOT EXISTS public.words (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   word text NOT NULL,
@@ -49,15 +55,17 @@ CREATE TABLE public.words (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX ON public.words (user_id, created_at DESC);
-CREATE INDEX ON public.words (user_id, status);
+CREATE INDEX IF NOT EXISTS words_user_created_idx ON public.words (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS words_user_status_idx ON public.words (user_id, status);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.words TO authenticated;
 GRANT ALL ON public.words TO service_role;
 ALTER TABLE public.words ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "own words" ON public.words FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "own words" ON public.words FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Quizzes
-CREATE TABLE public.quizzes (
+CREATE TABLE IF NOT EXISTS public.quizzes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   mode text NOT NULL DEFAULT 'mixed',
@@ -65,14 +73,16 @@ CREATE TABLE public.quizzes (
   total_questions integer NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX ON public.quizzes (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS quizzes_user_created_idx ON public.quizzes (user_id, created_at DESC);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.quizzes TO authenticated;
 GRANT ALL ON public.quizzes TO service_role;
 ALTER TABLE public.quizzes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "own quizzes" ON public.quizzes FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "own quizzes" ON public.quizzes FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Quiz words
-CREATE TABLE public.quiz_words (
+CREATE TABLE IF NOT EXISTS public.quiz_words (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   quiz_id uuid NOT NULL REFERENCES public.quizzes(id) ON DELETE CASCADE,
   word_id uuid NOT NULL REFERENCES public.words(id) ON DELETE CASCADE,
@@ -81,12 +91,14 @@ CREATE TABLE public.quiz_words (
   correct boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX ON public.quiz_words (user_id, created_at DESC);
-CREATE INDEX ON public.quiz_words (word_id);
+CREATE INDEX IF NOT EXISTS quiz_words_user_created_idx ON public.quiz_words (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS quiz_words_word_idx ON public.quiz_words (word_id);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.quiz_words TO authenticated;
 GRANT ALL ON public.quiz_words TO service_role;
 ALTER TABLE public.quiz_words ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "own quiz words" ON public.quiz_words FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "own quiz words" ON public.quiz_words FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- updated_at trigger
 CREATE OR REPLACE FUNCTION public.set_updated_at()
@@ -97,9 +109,9 @@ AS $$
 BEGIN NEW.updated_at = now(); RETURN NEW; END;
 $$;
 
-CREATE TRIGGER trg_profiles_updated_at BEFORE UPDATE ON public.profiles
+CREATE OR REPLACE TRIGGER trg_profiles_updated_at BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER trg_words_updated_at BEFORE UPDATE ON public.words
+CREATE OR REPLACE TRIGGER trg_words_updated_at BEFORE UPDATE ON public.words
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- Signup trigger: create profile + seed default tags
@@ -129,6 +141,6 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER on_auth_user_created
+CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
