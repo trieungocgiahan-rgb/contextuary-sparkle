@@ -45,8 +45,10 @@ jobs:
       # project's region. Fetch it from the Management API rather than hardcoding it.
       - name: Push database schema
         run: |
-          region=$(curl -sS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            "https://api.supabase.com/v1/projects/${{ secrets.SUPABASE_PROJECT_REF }}" | jq -r '.region')
+          response=$(curl -sS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/${{ secrets.SUPABASE_PROJECT_REF }}")
+          echo "Management API response: $response"
+          region=$(echo "$response" | jq -r '.region')
           echo "Project region: $region"
           if [ -z "$region" ] || [ "$region" = "null" ]; then
             echo "::error::Could not determine the project's region from the Management API."
