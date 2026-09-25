@@ -38,9 +38,21 @@ jobs:
       # No `supabase link` — on the Free plan it 403s trying to list database
       # branches (a paid-only feature) before it gets to anything we need. Every
       # command below is passed --project-ref (or a direct DB URL) instead.
+      #
+      # The direct db.<ref>.supabase.co host doesn't resolve from GitHub's runners
+      # (Supabase's direct-connect DNS isn't reachable from most serverless/CI
+      # environments) — go through the Session Pooler instead, which needs the
+      # project's region. Fetch it from the Management API rather than hardcoding it.
       - name: Push database schema
         run: |
-          supabase db push --db-url "postgresql://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co:5432/postgres"
+          region=$(curl -sS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/${{ secrets.SUPABASE_PROJECT_REF }}" | jq -r '.region')
+          echo "Project region: $region"
+          if [ -z "$region" ] || [ "$region" = "null" ]; then
+            echo "::error::Could not determine the project's region from the Management API."
+            exit 1
+          fi
+          supabase db push --db-url "postgresql://postgres.${{ secrets.SUPABASE_PROJECT_REF }}:${{ secrets.SUPABASE_DB_PASSWORD }}@aws-0-$region.pooler.supabase.com:5432/postgres"
 
       - name: Deploy Edge Functions
         run: supabase functions deploy --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
