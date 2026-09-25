@@ -4,10 +4,14 @@
 # One-time setup — add these as repo Secrets (Settings → Secrets and variables →
 # Actions → Secrets → New repository secret):
 #   SUPABASE_ACCESS_TOKEN   supabase.com/dashboard/account/tokens
-#   SUPABASE_PROJECT_REF    Project Settings → General → Reference ID
+#   SUPABASE_PROJECT_REF    Project Settings → General → Project ID
 #   SUPABASE_DB_PASSWORD    the database password you set when creating the project
 #                            (Project Settings → Database → Reset database password
 #                            if you don't remember it)
+#   SUPABASE_REGION          Project Settings → General → Project region
+#                            (e.g. ap-southeast-2 — used to reach the DB through the
+#                            Session Pooler, since the direct db.<ref>.supabase.co
+#                            host doesn't resolve from GitHub's runners)
 #   AI_API_KEY               your AI provider key
 #   AI_MODEL                 e.g. gemini-2.5-flash
 #   AI_BASE_URL               e.g. https://generativelanguage.googleapis.com/v1beta/openai
@@ -28,7 +32,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,18 +39,23 @@ jobs:
         with:
           version: latest
 
-      - name: Link project
-        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
-
+      # No `supabase link` — on the Free plan it 403s trying to list database
+      # branches (a paid-only feature) before it gets to anything we need. Every
+      # command below is passed --project-ref (or a direct DB URL) instead.
+      #
+      # Goes through the Session Pooler rather than a direct connection: the direct
+      # db.<ref>.supabase.co host doesn't resolve from GitHub's runners.
       - name: Push database schema
-        run: supabase db push
+        run: |
+          supabase db push --db-url "postgresql://postgres.${{ secrets.SUPABASE_PROJECT_REF }}:${{ secrets.SUPABASE_DB_PASSWORD }}@aws-0-${{ secrets.SUPABASE_REGION }}.pooler.supabase.com:5432/postgres"
 
       - name: Deploy Edge Functions
-        run: supabase functions deploy
+        run: supabase functions deploy --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
 
       - name: Set AI secrets
         run: |
           supabase secrets set \
+            --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}" \
             AI_API_KEY="${{ secrets.AI_API_KEY }}" \
             AI_MODEL="${{ secrets.AI_MODEL }}" \
             AI_BASE_URL="${{ secrets.AI_BASE_URL }}"

@@ -1,6 +1,6 @@
 
 -- 1) sat_words: shared bank
-CREATE TABLE public.sat_words (
+CREATE TABLE IF NOT EXISTS public.sat_words (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   word text NOT NULL UNIQUE,
   pronunciation text,
@@ -14,13 +14,15 @@ CREATE TABLE public.sat_words (
 GRANT SELECT ON public.sat_words TO anon, authenticated;
 GRANT ALL ON public.sat_words TO service_role;
 ALTER TABLE public.sat_words ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "sat_words readable by all" ON public.sat_words FOR SELECT USING (true);
-CREATE INDEX sat_words_rank_idx ON public.sat_words (frequency_rank);
-CREATE TRIGGER sat_words_updated_at BEFORE UPDATE ON public.sat_words
+DO $$ BEGIN
+  CREATE POLICY "sat_words readable by all" ON public.sat_words FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+CREATE INDEX IF NOT EXISTS sat_words_rank_idx ON public.sat_words (frequency_rank);
+CREATE OR REPLACE TRIGGER sat_words_updated_at BEFORE UPDATE ON public.sat_words
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- 2) daily_progress: per-user, per-local-date counter
-CREATE TABLE public.daily_progress (
+CREATE TABLE IF NOT EXISTS public.daily_progress (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   date date NOT NULL,
@@ -32,9 +34,11 @@ CREATE TABLE public.daily_progress (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.daily_progress TO authenticated;
 GRANT ALL ON public.daily_progress TO service_role;
 ALTER TABLE public.daily_progress ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "own daily progress" ON public.daily_progress
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE TRIGGER daily_progress_updated_at BEFORE UPDATE ON public.daily_progress
+DO $$ BEGIN
+  CREATE POLICY "own daily progress" ON public.daily_progress
+    FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+CREATE OR REPLACE TRIGGER daily_progress_updated_at BEFORE UPDATE ON public.daily_progress
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -- 3) Helper: list next daily-pick words for the caller
