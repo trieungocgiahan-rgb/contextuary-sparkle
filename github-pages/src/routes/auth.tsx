@@ -53,6 +53,25 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Supabase redirects back here with ?error=…&error_description=… (instead of a
+  // session) when a magic link or OAuth sign-in fails — most often because the link
+  // was already used/expired, or was opened in a different browser than the one that
+  // requested it (common with in-app mail browsers), which breaks the PKCE code
+  // exchange. Surface it instead of silently landing back on this page.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const description = params.get("error_description");
+    const code = params.get("error_code");
+    const err = params.get("error");
+    if (err || description || code) {
+      const message = (description ?? code ?? err ?? "Sign-in failed").replace(/\+/g, " ");
+      setAuthError(decodeURIComponent(message));
+      toast.error(decodeURIComponent(message));
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     let done = false;
@@ -69,7 +88,28 @@ function AuthPage() {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") goOn();
     });
-    return () => data.subscription.unsubscribe();
+
+    // Came back from a magic-link email (?code=…) but no session showed up and no
+    // ?error= was set either — almost always the link was opened in a different
+    // browser/app than the one that requested it, so the saved PKCE verifier is
+    // missing and the exchange fails silently. Explain instead of leaving a blank loop.
+    const hadCode = new URLSearchParams(window.location.search).has("code");
+    const silentFailureTimer = hadCode
+      ? window.setTimeout(() => {
+          if (!done) {
+            setAuthError(
+              "Couldn't finish signing in. If you opened the link in a different app or browser " +
+                "than the one you requested it from (e.g. your email app's built-in browser), " +
+                "copy the link and open it in Safari instead — or request a new one below.",
+            );
+          }
+        }, 4000)
+      : undefined;
+
+    return () => {
+      data.subscription.unsubscribe();
+      if (silentFailureTimer) window.clearTimeout(silentFailureTimer);
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -156,6 +196,12 @@ function AuthPage() {
                   <br className="hidden sm:block" /> Learn smarter, remember longer.
                 </p>
               </div>
+
+              {authError && (
+                <div className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                  {authError}
+                </div>
+              )}
 
               {/* Google button */}
               <motion.div whileHover={{ y: -1 }} transition={{ duration: 0.2 }} className="mt-6">
