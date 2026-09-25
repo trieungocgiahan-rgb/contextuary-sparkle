@@ -61,3 +61,33 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      # TEMPORARY — diagnosing a blank page report. Remove once resolved.
+      - name: Smoke test the live page
+        run: |
+          url="${{ steps.deployment.outputs.page_url }}"
+          echo "Checking $url"
+          for i in $(seq 1 6); do
+            body=$(curl -sS "$url" || true)
+            if [ -n "$body" ]; then break; fi
+            echo "empty response, retrying in 5s ($i/6)..."
+            sleep 5
+          done
+          echo "----- index.html -----"
+          echo "$body"
+          script_path=$(echo "$body" | grep -oE 'src="[^"]*\.js"' | head -1 | sed -E 's/src="(.*)"/\1/')
+          if [ -n "$script_path" ]; then
+            case "$script_path" in
+              /*) script_url="https://trieungocgiahan-rgb.github.io$script_path" ;;
+              *) script_url="${url%/}/$script_path" ;;
+            esac
+            echo "----- fetching $script_url -----"
+            js=$(curl -sS "$script_url" || true)
+            echo "JS bundle size: ${#js} bytes"
+            echo "----- grep for env values baked in -----"
+            echo "$js" | grep -oE 'https://[a-z0-9-]+\.supabase\.co' | sort -u || echo "(no supabase.co URL found in bundle)"
+            echo "$js" | grep -c "sb_publishable_" || echo "0 occurrences of sb_publishable_"
+            echo "$js" | grep -oE 'Missing VITE_SUPABASE[^"]*' | head -1 || true
+          else
+            echo "No script tag found in index.html"
+          fi
