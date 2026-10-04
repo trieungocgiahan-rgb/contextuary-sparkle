@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Search, Sparkles, Star, Trash2, Volume2, Filter, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +36,9 @@ export const Route = createFileRoute("/_authenticated/words")({
       { property: "og:description", content: "Your personal SAT vocabulary library." },
     ],
   }),
+  // /words?add=ubiquitous opens the Add Word dialog prefilled (used by landing-page CTAs).
+  validateSearch: (search: Record<string, unknown>): { add?: string } =>
+    typeof search.add === "string" && search.add.trim() ? { add: search.add.slice(0, 60) } : {},
   component: WordsPage,
 });
 
@@ -57,12 +60,20 @@ function WordsPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { add: addFromLink } = Route.useSearch();
 
   const create = useServerFn(createWord);
   const del = useServerFn(deleteWord);
   const upd = useServerFn(updateWord);
   const generate = useServerFn(generateWordDetails);
   const validate = useServerFn(validateWord);
+
+  useEffect(() => {
+    if (!addFromLink) return;
+    setNewWord(addFromLink.trim().toLowerCase());
+    setAddOpen(true);
+    navigate({ to: "/words", search: {}, replace: true });
+  }, [addFromLink, navigate]);
 
   const filtered = words
     .filter((w) => {
