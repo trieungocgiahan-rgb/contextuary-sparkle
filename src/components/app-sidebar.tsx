@@ -57,7 +57,7 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 hidden flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 lg:flex",
+        "fixed inset-y-0 left-0 hidden flex-col bg-sidebar bg-sidebar-ombre text-sidebar-foreground transition-[width] duration-200 lg:flex",
         collapsed ? "w-16" : "w-64",
       )}
     >

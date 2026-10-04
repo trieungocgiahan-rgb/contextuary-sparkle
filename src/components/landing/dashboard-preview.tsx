@@ -12,26 +12,27 @@ const ROWS = [
 
 export function DashboardPreview() {
   return (
-    <section id="pricing" className="py-24 md:py-32">
+    <section id="library" className="scroll-mt-20 py-12 md:py-16">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-12 rounded-3xl border border-border bg-accent/40 p-8 md:p-12 lg:grid-cols-[1fr_1.8fr] lg:items-center">
+        <div className="grid gap-12 overflow-hidden rounded-[2rem] bg-ombre p-8 text-white shadow-2xl shadow-primary/20 md:p-12 lg:grid-cols-[1fr_1.8fr] lg:items-center">
           <SectionReveal>
-            <div className="text-xs font-semibold uppercase tracking-wide text-primary">
+            <div className="text-xs font-bold uppercase tracking-widest text-pink-200">
               Your vocabulary hub
             </div>
-            <h2 className="mt-3 text-3xl font-bold text-foreground md:text-4xl">
+            <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">
               All your words.
               <br />
               All in one place.
             </h2>
-            <p className="mt-3 max-w-xs text-sm text-muted-foreground">
-              Organize, review, and master your vocabulary with ease.
+            <p className="mt-3 max-w-xs text-sm text-white/75">
+              Search, filter by status or topic tag, star favorites and hear every word
+              pronounced. Daily Picks suggest new SAT words each day.
             </p>
             <Link
-              to="/auth"
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow-md"
+              to="/words"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-primary shadow-lg transition-all hover:bg-white/90"
             >
-              Explore the dashboard <ArrowRight className="h-4 w-4" />
+              Open My Words <ArrowRight className="h-4 w-4" />
             </Link>
           </SectionReveal>
 
@@ -39,10 +40,10 @@ export function DashboardPreview() {
             <motion.div
               whileHover={{ scale: 1.02, rotate: -0.4 }}
               transition={{ duration: 0.3 }}
-              className="overflow-hidden rounded-2xl border border-border bg-background shadow-xl"
+              className="overflow-hidden rounded-2xl border border-white/20 bg-background text-foreground shadow-2xl shadow-black/40"
             >
               <div className="grid grid-cols-[140px_1fr] md:grid-cols-[180px_1fr]">
-                <div className="bg-sidebar p-4 text-sidebar-foreground">
+                <div className="bg-sidebar bg-sidebar-ombre p-4 text-sidebar-foreground">
                   <div className="flex items-center gap-1.5 text-sm font-semibold">
                     Contextuary <Sparkle className="text-sidebar-primary" size={10} />
                   </div>
@@ -89,9 +90,9 @@ export function DashboardPreview() {
                       <Search className="h-3 w-3 text-muted-foreground" />
                       <span className="text-[11px] text-muted-foreground">Search a word…</span>
                     </div>
-                    <button className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-medium text-primary-foreground">
+                    <span className="btn-ombre inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-medium">
                       <Plus className="h-3 w-3" /> Add Word
-                    </button>
+                    </span>
                   </div>
                   <div className="mt-3 overflow-hidden rounded-lg border border-border">
                     <div className="grid grid-cols-[1fr_1fr_1.5fr_0.7fr_0.7fr] gap-2 border-b border-border bg-muted/50 px-3 py-2 text-[10px] font-semibold uppercase text-muted-foreground">
